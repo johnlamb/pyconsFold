@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import os
-from confold_helpers import print2file
+from _confold_helpers import print2file
 
 
 def get_dist_neg_pos(mean, devi, lbd, lbd_dev=None):

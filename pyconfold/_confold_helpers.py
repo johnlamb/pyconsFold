@@ -1245,6 +1245,7 @@ def assess_dgsa(stage, fasta_file, ss_file, dir_out, mcount, f_id,
         print("model{}.pdb <= {}".format(i, pdb))
         shutil.move(pdb, "{}_model{}.pdb".format(f_id, i))
         i += 1
-        if i > mcount:
+        # if i > mcount:
+        if i > 5:   # Only move the top 5 models
             break
     os.remove("dgsa.log")
