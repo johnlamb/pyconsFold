@@ -5,14 +5,14 @@ import shutil
 import glob
 import sys
 import datetime
-from _confold_helpers import check_programs,\
+from _pyconfold_helpers import check_programs,\
                             process_parameters,\
                             build_extended, xyz_pdb,\
                             contact_restraints, sec_restraints, build_models,\
                             assess_dgsa
-from _confold_libs import load_ss_restraints
+from _pyconfold_libs import load_ss_restraints
 
-def confold():
+def run_pyconfold():
     program_dssp = "/home/johnlamb/bin/dssp-2.0.4-linux-amd64"
     cns_suite = "/home/johnlamb/cns_solve_1.3"
     cns_executable = cns_suite + "/intel-x86_64bit-linux/bin/cns_solve"
@@ -133,4 +133,4 @@ def confold():
 
 
 if __name__ == "__main__":
-    confold()
+    run_pyconfold()
