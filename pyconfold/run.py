@@ -15,7 +15,8 @@ from ._pyconfold_libs import load_ss_restraints
 
 def pyconfold(fasta, ss, rr, dir_out, pair=None, rrtype="cb", mcount=20, selectrr="all",
               lbd=0.4, contwt=10, sswt=5, rep2=0.85, pthres=7.0):
-    program_dssp = "/home/johnlamb/bin/dssp-2.0.4-linux-amd64"
+    # program_dssp = "/home/johnlamb/bin/dssp-2.0.4-linux-amd64"
+    program_dssp = os.path.join(os.path.dirname(os.path.realpath(__file__)), "dssp/dssp-2.0.4-linux-amd64")
     cns_suite = "/home/johnlamb/cns_solve_1.3"
     cns_executable = cns_suite + "/intel-x86_64bit-linux/bin/cns_solve"
 

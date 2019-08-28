@@ -1,0 +1,8 @@
+A series of PDB related databases for everyday needs.
+Wouter G Touw, Coos Baakman, Jon Black, Tim AH te Beek, E Krieger, Robbie P Joosten, Gert Vriend.
+Nucleic Acids Research 2015 January; 43(Database issue): D364-D368.
+
+Dictionary of protein secondary structure: pattern recognition of hydrogen-bonded and geometrical features.
+Kabsch W, Sander C,
+Biopolymers. 1983 22 2577-2637.
+PMID: 6667333; UI: 84128824. 
