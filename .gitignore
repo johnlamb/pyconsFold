@@ -24,6 +24,8 @@ build/
 dist/
 *.egg-info/
 
+tests/input
+tests/stage1
 *.html
 *.c
 *.so

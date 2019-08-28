@@ -56,8 +56,13 @@ def run_pyconfold():
 
     # base_dir = os.path.dirname(os.path.realpath(__file__))
     # base_dir = os.getcwd()
+    # print(base_dir)
     # dir_out = os.path.join(base_dir, args.dir_out)
-    module_base = os.path.dirname(os.path.realpath(__file__))
+    module_base = os.path.join(base_dir, os.path.dirname(os.path.relpath(__file__)))
+    # dir_path = os.path.dirname(os.path.realpath(__file__))
+    # print(dir_path)
+    # print(module_base)
+    # sys.exit()
     shutil.copytree(os.path.join(dir_out, "input"),
                     os.path.join(dir_out, "stage1"))
     shutil.copy(os.path.join(module_base,  "templates/gseq.inp"),
