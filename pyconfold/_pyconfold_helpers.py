@@ -139,6 +139,141 @@ def chk_errors_seq(seq):
             sys.exit()
 
 
+def process_arguments(fasta, ss, rr, dir_out, pair, rrtype, mcount, selectrr,
+                      lbd, contwt, sswt, rep2, pthres):
+    if not os.path.isfile(fasta):
+        print("ERROR! Fasta file {} does not exist!".format(fasta))
+        sys.exit()
+    if not os.path.isfile(ss):
+        print("ERROR! Secondary structure file {} " +
+              "does not exist!".format(fasta))
+        sys.exit()
+    if not os.path.isfile(rr):
+        print("ERROR! Contact file {} does not exist!".format(fasta))
+        sys.exit()
+    if pair is not None and not os.path.isfile(pair):
+        print("ERROR! Pair file {} does not exist!".format(pair))
+        sys.exit()
+
+    L = len(seq_fasta(fasta))
+    mini = 15 * L
+    f_id = os.path.splitext(os.path.basename(fasta))[0]
+
+    selectrr = selectrr.replace("L", "")
+    selectrr = 100000 if selectrr == "all" else int(float(selectrr) * L + 0.5)
+    if not (selectrr > 0 and selectrr <= 100000):
+        print("ERROR! Selectrr option does not " +
+              "look right: {}".format(selectrr))
+        sys.exit()
+    if not (mcount >= 5 and mcount <= 50):
+        print("ERROR! Model count must be between 5 and 50!")
+        sys.exit()
+    if not (lbd >= 0.1 and lbd <= 10.0):
+        print("ERROR! Lambda must be between 0.1 and 10.0!")
+        sys.exit()
+    if not (contwt >= 0.1 and contwt <= 10000):
+        print("ERROR! Contact restraint weights must be " +
+              "between 0.1 and 10000!")
+        sys.exit()
+    if not (sswt >= 0.1 and sswt <= 100):
+        print("ERROR! SS restraint weights must be between 0.1 and 100!")
+        sys.exit()
+    if not (rep2 >= 0.6 and rep2 <= 1.5):
+        print("ERROR! Rep2 must be between 0.6 and 1.5!")
+        sys.exit()
+    if not (pthres >= 5.0 and pthres <= 10.0):
+        print("ERROR! Pair detection threshold must be between 5.0 and 10.0!")
+        sys.exit()
+
+    dir_out = os.path.abspath(os.path.join(os.getcwd(), dir_out))
+    if not os.path.isdir(dir_out):
+        os.mkdir(dir_out)
+    if os.path.isdir(dir_out + "/input"):
+        shutil.rmtree(dir_out + "/input")
+    if os.path.isdir(dir_out + "/stage1"):
+        shutil.rmtree(dir_out + "/stage1")
+    if os.path.isdir(dir_out + "/stage2"):
+        shutil.rmtree(dir_out + "/stage2")
+    os.mkdir(dir_out + "/input")
+    # os.mkdir(dir_out + "/stage1")
+
+    fasta_file = f_id + ".fasta"
+    rr_file = f_id + ".rr"
+    ss_file = f_id + ".ss"
+    pair_file = None
+    if pair is not None:
+        pair_file = f_id + ".pair"
+        shutil.copy(pair, dir_out + "/input/" + pair_file)
+
+    shutil.copy(fasta, dir_out + "/input/" + fasta_file)
+    shutil.copy(rr, dir_out + "/input/" + rr_file)
+    shutil.copy(ss, dir_out + "/input/" + ss_file)
+
+    base_dir = os.path.dirname(os.path.realpath(__file__))
+    os.chdir(dir_out + "/input")
+
+    flatten_fasta(fasta_file)
+    residues = fasta2residues(fasta_file)
+    seq = seq_fasta(fasta_file)
+    chk_errors_seq(seq)
+
+    rr_seq = seq_rr(rr_file)
+    if not seq == rr_seq:
+        print("ERROR! Fasta and rr sequence do not match!" +
+              "\nFasta\t: {} \nRR\t:{}".format(seq, rr_seq))
+
+    ss_seq = seq_fasta(ss_file)
+    if len(seq) != len(ss_seq):
+        print("ERROR! Fasta and ss sequence length do not match!" +
+              "\nFasta\t: {} \nRR\t:{}".format(seq, ss_seq))
+
+    for s in ss_seq:
+        if s not in "HCE":
+            print("ERROR undefined secondary structure unit {}".format(s))
+            sys.exit()
+
+    if os.path.isfile("sorted.rr"):
+        os.remove("sorted.rr")
+    subprocess.call("sed -i '/^[A-Z]/d' {}".format(rr_file), shell=True)
+    subprocess.call("sed -i 's/^ *//' {}".format(rr_file), shell=True)
+    subprocess.call("sort -nr -s -k5 {} > sorted.rr".format(rr_file),
+                    shell=True)
+    os.remove(rr_file)
+    print2file(rr_file, seq + '\n')
+    subprocess.call("cat sorted.rr >> {}".format(rr_file), shell=True)
+    os.remove("sorted.rr")
+    contacts = rr2contacts(rr_file, 1)
+
+    for key in contacts.keys():
+        a, b = key.split()
+        if not residues[int(a)]:
+            print("ERROR! Residue {} is out of sequence!".format(a))
+            sys.exit()
+        if not residues[int(b)]:
+            print("ERROR! Residue {} is out of sequence!".format(b))
+            sys.exit()
+
+    for r in seq:
+        if r not in AA1TO3:
+            print("ERROR! Undefined amino acid {} in {}".format(r, seq))
+            sys.exit()
+
+    os.chdir(base_dir)
+    print("dir_out      {}".format(dir_out))
+    print("fasta_file   {}".format(fasta_file))
+    print("rr_file      {}".format(rr_file))
+    print("ss_file      {}".format(ss_file))
+    print("selectrr     {}".format(selectrr))
+    print("rrtype       {}".format(rrtype))
+    # print(lbd)
+    print("id           {}".format(f_id))
+    print("L            {}".format(L))
+    print("sequence     {}".format(seq))
+    print("ss_seq       {}".format(ss_seq))
+    return fasta_file, rr_file, ss_file, pair_file, residues,\
+        f_id, selectrr, mini
+
+
 def process_parameters(args):
     if not os.path.isfile(args.fasta):
         print("ERROR! Fasta file {} does not exist!".format(args.fasta))

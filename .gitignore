@@ -26,6 +26,7 @@ dist/
 
 tests/input
 tests/stage1
+refrun
 *.html
 *.c
 *.so
