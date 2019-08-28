@@ -14,6 +14,7 @@ setuptools.setup(
         url="https://github.com/johnlamb/pyconfold",
         packages=setuptools.find_packages(),
         include_package_data=True,
+        zip_safe=False,
         classifiers=[
             "Programming Language :: Python :: 3",
             "License :: OSI Approved :: GPLv3",
