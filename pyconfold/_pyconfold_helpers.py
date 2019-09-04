@@ -139,7 +139,8 @@ def chk_errors_seq(seq):
             sys.exit()
 
 
-def process_arguments(fasta, ss, rr, dir_out, pair, rrtype, mcount, selectrr,
+# pair not implemented
+def process_arguments(fasta, ss, rr, dir_out, rrtype, mcount, selectrr,
                       lbd, contwt, sswt, rep2, pthres):
     if not os.path.isfile(fasta):
         print("ERROR! Fasta file {} does not exist!".format(fasta))
@@ -151,9 +152,9 @@ def process_arguments(fasta, ss, rr, dir_out, pair, rrtype, mcount, selectrr,
     if not os.path.isfile(rr):
         print("ERROR! Contact file {} does not exist!".format(fasta))
         sys.exit()
-    if pair is not None and not os.path.isfile(pair):
-        print("ERROR! Pair file {} does not exist!".format(pair))
-        sys.exit()
+    # if pair is not None and not os.path.isfile(pair):
+    #     print("ERROR! Pair file {} does not exist!".format(pair))
+    #     sys.exit()
 
     L = len(seq_fasta(fasta))
     mini = 15 * L
@@ -201,9 +202,9 @@ def process_arguments(fasta, ss, rr, dir_out, pair, rrtype, mcount, selectrr,
     rr_file = f_id + ".rr"
     ss_file = f_id + ".ss"
     pair_file = None
-    if pair is not None:
-        pair_file = f_id + ".pair"
-        shutil.copy(pair, dir_out + "/input/" + pair_file)
+    # if pair is not None:
+    #     pair_file = f_id + ".pair"
+    #     shutil.copy(pair, dir_out + "/input/" + pair_file)
 
     shutil.copy(fasta, dir_out + "/input/" + fasta_file)
     shutil.copy(rr, dir_out + "/input/" + rr_file)
@@ -1251,7 +1252,7 @@ def noe_tbl_violation_coverage(pdb, tbl):
     return cov
 
 
-def assess_dgsa(stage, fasta_file, ss_file, dir_out, mcount, f_id,
+def assess_dgsa(stage, fasta_file, ss_file, dir_out, mcount, f_id, num_top_models,
                 program_dssp):
     seq = seq_fasta(fasta_file)
     pdb_list = load_pdb(os.path.join(dir_out, stage))
@@ -1378,9 +1379,10 @@ def assess_dgsa(stage, fasta_file, ss_file, dir_out, mcount, f_id,
     for pdb, noe_energy in sorted(energy_noe.items(),
                                   key=lambda i: i[1]):
         print("model{}.pdb <= {}".format(i, pdb))
+        shutil.copy(pdb, os.path.join(dir_out, "{}_model{}.pdb".format(f_id, i)))
         shutil.move(pdb, "{}_model{}.pdb".format(f_id, i))
         i += 1
         # if i > mcount:
-        if i > 5:   # Only move the top 5 models
+        if i > num_top_models:   # Only move the top models
             break
     os.remove("dgsa.log")
