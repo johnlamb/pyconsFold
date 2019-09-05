@@ -10,15 +10,15 @@ from ._pyconfold_helpers import check_programs,\
                             process_arguments,\
                             build_extended, xyz_pdb,\
                             contact_restraints, sec_restraints, build_models,\
-                            assess_dgsa
+                            assess_dgsa, clean_output_dir
 from ._pyconfold_libs import load_ss_restraints
+
+# program_dssp = "/home/johnlamb/bin/dssp-2.0.4-linux-amd64"
+program_dssp = os.path.join(os.path.dirname(os.path.realpath(__file__)), "dssp/dssp-2.0.4-linux-amd64")
 
 # pair=None  not implemented yet
 def pyconfold(fasta, ss, rr, dir_out, save_steps=False, num_top_models=5, rrtype="cb", mcount=20, selectrr="all",
-              lbd=0.4, contwt=10, sswt=5, rep2=0.85, pthres=7.0):
-    # program_dssp = "/home/johnlamb/bin/dssp-2.0.4-linux-amd64"
-    program_dssp = os.path.join(os.path.dirname(os.path.realpath(__file__)), "dssp/dssp-2.0.4-linux-amd64")
-
+              lbd=0.4, contwt=10, sswt=5, rep2=0.85, pthres=7.0, debug=False):
     # cns_suite = "<enter CNS-path here>"
     cns_suite = os.environ["CNS_SOLVE"]
     cns_executable = cns_suite + "/intel-x86_64bit-linux/bin/cns_solve"
@@ -158,10 +158,7 @@ def pyconfold(fasta, ss, rr, dir_out, save_steps=False, num_top_models=5, rrtype
                     program_dssp)
 
     if not save_steps:
-        # for fn in glob.glob(dir_out + "/stage1/*_model*.pdb"):
-        #     shutil.copy(fn, dir_out)
-        shutil.rmtree(dir_out + "/input")
-        shutil.rmtree(dir_out + "/stage1")
+        clean_output_dir(dir_out)
 
     # print("\nFinished [{}]: {}".format(parser.prog,
     #                                    datetime.datetime.now().

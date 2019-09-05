@@ -59,7 +59,7 @@ def seq_fasta(fasta_file):
     return seq
 
 
-def seq_rr(rr_file):
+def seq_rr(rr_file, dir_out):
     seq_rr = ""
     with open(rr_file) as rr_handle:
         for line in rr_handle:
@@ -89,6 +89,7 @@ def seq_rr(rr_file):
                 seq_rr += line.strip()
     if len(seq_rr) == 0:
         print("No sequence header in {}".format(rr_file))
+        clean_output_dir(dir_out)
         sys.exit()
     return seq_rr
 
@@ -132,11 +133,19 @@ def rr2contacts(rr_file, seq_sep):
     return contacts
 
 
-def chk_errors_seq(seq):
+def chk_errors_seq(seq, dir_out):
     for res in seq:
         if res not in AA1TO3:
             print("Undefined amino acid {} in {}".format(res, seq))
+            clean_output_dir(dir_out)
             sys.exit()
+
+
+def clean_output_dir(dir_out):
+    # for fn in glob.glob(dir_out + "/stage1/*_model*.pdb"):
+    #     shutil.copy(fn, dir_out)
+    shutil.rmtree(dir_out + "/input")
+    shutil.rmtree(dir_out + "/stage1")
 
 
 # pair not implemented
@@ -201,7 +210,7 @@ def process_arguments(fasta, ss, rr, dir_out, rrtype, mcount, selectrr,
     fasta_file = f_id + ".fasta"
     rr_file = f_id + ".rr"
     ss_file = f_id + ".ss"
-    pair_file = None
+    # pair_file = None
     # if pair is not None:
     #     pair_file = f_id + ".pair"
     #     shutil.copy(pair, dir_out + "/input/" + pair_file)
@@ -216,25 +225,38 @@ def process_arguments(fasta, ss, rr, dir_out, rrtype, mcount, selectrr,
     flatten_fasta(fasta_file)
     residues = fasta2residues(fasta_file)
     seq = seq_fasta(fasta_file)
-    chk_errors_seq(seq)
+    chk_errors_seq(seq, dir_out)
 
-    rr_seq = seq_rr(rr_file)
+    rr_seq = seq_rr(rr_file, dir_out)
     if not seq == rr_seq:
         print("ERROR! Fasta and rr sequence do not match!" +
               "\nFasta\t: {} \nRR\t:{}".format(seq, rr_seq))
+        clean_output_dir(dir_out)
+        sys.exit()
 
     ss_seq = seq_fasta(ss_file)
     if len(seq) != len(ss_seq):
         print("ERROR! Fasta and ss sequence length do not match!" +
               "\nFasta\t: {} \nRR\t:{}".format(seq, ss_seq))
+        clean_output_dir(dir_out)
+        sys.exit()
 
     for s in ss_seq:
         if s not in "HCE":
             print("ERROR undefined secondary structure unit {}".format(s))
+            clean_output_dir(dir_out)
             sys.exit()
 
     if os.path.isfile("sorted.rr"):
         os.remove("sorted.rr")
+    print("Here")
+    rr_lines = []
+    with open(rr_file) as rr_handle:
+        rr_lines = rr_handle.read().split('\n')
+    # for line in rr_lines:
+    print(len(rr_lines))
+    print(rr_lines)
+    sys.exit()
     subprocess.call("sed -i '/^[A-Z]/d' {}".format(rr_file), shell=True)
     subprocess.call("sed -i 's/^ *//' {}".format(rr_file), shell=True)
     subprocess.call("sort -nr -s -k5 {} > sorted.rr".format(rr_file),
