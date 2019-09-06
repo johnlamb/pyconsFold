@@ -62,10 +62,9 @@ def pyconfold(fasta, ss, rr, dir_out, save_steps=False, num_top_models=5, rrtype
     # fasta_file, rr_file, ss_file, pair_file, residues, f_id, selectrr, mini =\
     #         process_parameters(args)
     # pair  not implemented
-    fasta_file, rr_file, ss_file, pair_file, residues, f_id, selectrr, mini =\
+    fasta_file, rr_file, ss_file, residues, f_id, selectrr, mini =\
             process_arguments(fasta, ss, rr, dir_out, rrtype, mcount, selectrr,
-                              lbd, contwt, sswt, rep2, pthres)
-
+                              lbd, contwt, sswt, rep2, pthres, debug)
     # base_dir = os.path.dirname(os.path.realpath(__file__))
     # base_dir = os.getcwd()
     # print(base_dir)
@@ -101,13 +100,15 @@ def pyconfold(fasta, ss, rr, dir_out, save_steps=False, num_top_models=5, rrtype
     # print("\nStart [{}]: {}".format(parser.prog,
     #                                 datetime.datetime.now().
     #                                 replace(microsecond=0)))
-    print("\nStart [{}]: {}".format("Pyconfold",
-                                    datetime.datetime.now().
-                                    replace(microsecond=0)))
-    print("\nBuild extended mtf and pdb...")
+    if debug:
+        print("\nStart [{}]: {}".format("Pyconfold",
+                                        datetime.datetime.now().
+                                        replace(microsecond=0)))
+        print("\nBuild extended mtf and pdb...")
 
     if not os.path.isfile("extended.pdb"):
             build_extended(fasta_file, cns_suite, cns_executable)
+    sys.exit()
     defined_atoms = xyz_pdb("extended.pdb", "all")
 
     # Hydrogen or Nitrogen must be present for all atoms, in order to apply
@@ -119,6 +120,7 @@ def pyconfold(fasta, ss, rr, dir_out, save_steps=False, num_top_models=5, rrtype
         else:
             print("ERROR!! Something went wrong with residue {} ".format(ix) +
                   "extended must have H or N for each residue!")
+            sys.exit()
 
     stage_list = []
     # if args.stage2:

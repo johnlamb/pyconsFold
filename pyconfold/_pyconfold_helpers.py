@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import stat
 import sys
 import argparse
 import time
@@ -150,7 +151,7 @@ def clean_output_dir(dir_out):
 
 # pair not implemented
 def process_arguments(fasta, ss, rr, dir_out, rrtype, mcount, selectrr,
-                      lbd, contwt, sswt, rep2, pthres):
+                      lbd, contwt, sswt, rep2, pthres, debug):
     if not os.path.isfile(fasta):
         print("ERROR! Fasta file {} does not exist!".format(fasta))
         sys.exit()
@@ -249,51 +250,67 @@ def process_arguments(fasta, ss, rr, dir_out, rrtype, mcount, selectrr,
 
     if os.path.isfile("sorted.rr"):
         os.remove("sorted.rr")
-    print("Here")
+
     rr_lines = []
+    raw_rr_lines = []
     with open(rr_file) as rr_handle:
-        rr_lines = rr_handle.read().split('\n')
+        raw_rr_lines = rr_handle.read().split('\n')
+    for line in raw_rr_lines:
+        if re.match('^[A-Za-z]', line):
+            continue
+        if len(line) == 0:
+            continue
+        rr_lines.append(line.strip().split())
+    rr_lines.sort(key=lambda x: float(x[4]), reverse=True)
+    rr_scores = '\n'.join([' '.join(x) for x in rr_lines])
+
     # for line in rr_lines:
-    print(len(rr_lines))
-    print(rr_lines)
-    sys.exit()
-    subprocess.call("sed -i '/^[A-Z]/d' {}".format(rr_file), shell=True)
-    subprocess.call("sed -i 's/^ *//' {}".format(rr_file), shell=True)
-    subprocess.call("sort -nr -s -k5 {} > sorted.rr".format(rr_file),
-                    shell=True)
+    # print(len(rr_lines))
+    # print(raw_rr_lines)
+    # print(rr_lines)
+    # print(rr_scores)
+    # subprocess.call("sed -i '/^[A-Z]/d' {}".format(rr_file), shell=True)
+    # subprocess.call("sed -i 's/^ *//' {}".format(rr_file), shell=True)
+    # subprocess.call("sort -nr -s -k5 {} > sorted.rr".format(rr_file),
+    #                 shell=True)
     os.remove(rr_file)
-    print2file(rr_file, seq + '\n')
-    subprocess.call("cat sorted.rr >> {}".format(rr_file), shell=True)
-    os.remove("sorted.rr")
+    print2file(rr_file, seq + '\n' + rr_scores + '\n')
+    # subprocess.call("cat sorted.rr >> {}".format(rr_file), shell=True)
+    # os.remove("sorted.rr")
     contacts = rr2contacts(rr_file, 1)
 
     for key in contacts.keys():
         a, b = key.split()
         if not residues[int(a)]:
             print("ERROR! Residue {} is out of sequence!".format(a))
+            clean_output_dir(dir_out)
             sys.exit()
         if not residues[int(b)]:
             print("ERROR! Residue {} is out of sequence!".format(b))
+            clean_output_dir(dir_out)
             sys.exit()
 
     for r in seq:
         if r not in AA1TO3:
             print("ERROR! Undefined amino acid {} in {}".format(r, seq))
+            clean_output_dir(dir_out)
             sys.exit()
 
     os.chdir(base_dir)
-    print("dir_out      {}".format(dir_out))
-    print("fasta_file   {}".format(fasta_file))
-    print("rr_file      {}".format(rr_file))
-    print("ss_file      {}".format(ss_file))
-    print("selectrr     {}".format(selectrr))
-    print("rrtype       {}".format(rrtype))
-    # print(lbd)
-    print("id           {}".format(f_id))
-    print("L            {}".format(L))
-    print("sequence     {}".format(seq))
-    print("ss_seq       {}".format(ss_seq))
-    return fasta_file, rr_file, ss_file, pair_file, residues,\
+    if debug:
+        print("dir_out      {}".format(dir_out))
+        print("fasta_file   {}".format(fasta_file))
+        print("rr_file      {}".format(rr_file))
+        print("ss_file      {}".format(ss_file))
+        print("selectrr     {}".format(selectrr))
+        print("rrtype       {}".format(rrtype))
+        # print(lbd)
+        print("id           {}".format(f_id))
+        print("L            {}".format(L))
+        print("sequence     {}".format(seq))
+        print("ss_seq       {}".format(ss_seq))
+    # pair_file
+    return fasta_file, rr_file, ss_file, residues,\
         f_id, selectrr, mini
 
 
@@ -456,10 +473,13 @@ def build_extended(fasta_file, cns_suite, cns_executable):
     job_file += "{} < gseq.inp > gseq.log\n".format(cns_executable)
     job_file += "{} < extn.inp > extn.log".format(cns_executable)
     print2file("job.sh", job_file)
-    subprocess.call("chmod +x job.sh", shell=True)
+    st = os.stat("job.sh")
+    os.chmod("job.sh", st.st_mode | stat.S_IEXEC)
+    # subprocess.call("chmod +x job.sh", shell=True)
     subprocess.call("./job.sh &> job.log", shell=True)
     if not os.path.isfile("extended.pdb"):
         print("FAILED! extended.pdb not found")
+        clean_output_dir() 
         sys.exit()
     os.remove("gseq.log")
     os.remove("extn.log")
