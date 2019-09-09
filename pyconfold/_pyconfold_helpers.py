@@ -479,7 +479,6 @@ def build_extended(fasta_file, cns_suite, cns_executable):
     subprocess.call("./job.sh &> job.log", shell=True)
     if not os.path.isfile("extended.pdb"):
         print("FAILED! extended.pdb not found")
-        clean_output_dir() 
         sys.exit()
     os.remove("gseq.log")
     os.remove("extn.log")
@@ -557,9 +556,9 @@ def xyz_pdb(chain, atom_selection):
     return selected_xyz
 
 
-def rr2r1a1r2a2(rr_file, rrtype):
+def rr2r1a1r2a2(rr_file, rrtype, dir_out):
     contacts = rr2contacts(rr_file, 1)
-    seq = seq_rr(rr_file)
+    seq = seq_rr(rr_file, dir_out)
     r1a1r2a2 = {}
     for key in contacts.keys():
         a, b = [int(x) for x in key.split()]
@@ -573,8 +572,8 @@ def rr2r1a1r2a2(rr_file, rrtype):
     return r1a1r2a2
 
 
-def rr2tbl(rr_file, tbl_file, rrtype):
-    r1a1r2a2 = rr2r1a1r2a2(rr_file, rrtype)
+def rr2tbl(rr_file, tbl_file, rrtype, dir_out):
+    r1a1r2a2 = rr2r1a1r2a2(rr_file, rrtype, dir_out)
     if os.path.isfile(tbl_file):
         os.remove(tbl_file)
     to_print = []
@@ -592,17 +591,27 @@ def rr2tbl(rr_file, tbl_file, rrtype):
     print2file(tbl_file, '\n'.join(to_print) + '\n')
 
 
-def contact_restraints(stage, selectrr, rrtype, rr_file=None):
+def contact_restraints(stage, selectrr, rrtype, dir_out, rr_file=None):
     if stage == "stage1":
         if not rr_file:
             return
         xL = selectrr + 1  # +1 to account for header line
         # print(rr_file)
-        subprocess.call("head -n {} {} > temp.rr".format(xL, rr_file),
-                        shell=True)
-        subprocess.call("rm {}".format(rr_file), shell=True)
-        subprocess.call("mv temp.rr {}".format(rr_file), shell=True)
-        rr2tbl(rr_file, "contact.tbl", rrtype)
+        rr_data = []
+        with open(rr_file) as rr_handle:
+            i = 0
+            for line in rr_handle:
+                rr_data.append(line)
+                i += 1
+                if i >= xL:
+                    break
+        # subprocess.call("head -n {} {} > temp.rr".format(xL, rr_file),
+        #                 shell=True)
+        # subprocess.call("rm {}".format(rr_file), shell=True)
+        # subprocess.call("mv temp.rr {}".format(rr_file), shell=True)
+        os.remove(rr_file)
+        print2file(rr_file, ''.join(rr_data))
+        rr2tbl(rr_file, "contact.tbl", rrtype, dir_out)
 
 
 def print_helix_restraints(ss_file, residues, log_file, res_dihe,
@@ -767,8 +776,8 @@ def strand_and_sheet_tbl(ss_file, pair_file, pair_hbonds,
     print2file(ssnoe_file, "\n".join(ssnoe_to_write) + '\n')
 
 
-def sec_restraints(stage, ss_file, pair_file, res_dihe, res_hbnd, res_dist,
-                   res_strnd_OO, residues, ATOMTYPE, SHIFT):
+def sec_restraints(stage, ss_file, res_dihe, res_hbnd, res_dist,
+                   res_strnd_OO, residues, ATOMTYPE, SHIFT, debug):
     log_file = "ssrestraints.log"
     if os.path.isfile(log_file):
         os.remove(log_file)
@@ -781,19 +790,20 @@ def sec_restraints(stage, ss_file, pair_file, res_dihe, res_hbnd, res_dist,
         print2file(log_file, "no strand restraints")
         return
     elif strands == 1:
-        print("WARNING! Only 1 strand! Check ss-file")
+        if debug:
+            print("WARNING! Only 1 strand! Check ss-file")
         print2file(log_file, "WARNING! only 1 strand! please check your " +
                              "secondary structure file!")
         return
 
     if stage == "stage1":
-        if pair_file:
-            ###################
-            # NOT IMPLEMENTED #
-            ###################
-            pairing2hbonds(pair_file, "pairing_hbonds.txt")
-        else:
-            strand_and_sheet_tbl(ss_file, None, None, res_dihe, res_strnd_OO)
+        # if pair_file:
+        #     ###################
+        #     # NOT IMPLEMENTED #
+        #     ###################
+        #     pairing2hbonds(pair_file, "pairing_hbonds.txt")
+        # else:
+        strand_and_sheet_tbl(ss_file, None, None, res_dihe, res_strnd_OO)
     else:
         # TODO implement the next stage, using stage1 model
         pass
@@ -930,18 +940,20 @@ def write_cns_dgsa_file(contwt, sswt, mcount, mode,
 
 
 def build_models(stage, fasta_file, ss_file, contwt, sswt, mcount, mode,
-                 rep1, rep2, mini, f_id, atomselect, dir_out, cns_suite):
+                 rep1, rep2, mini, f_id, atomselect, dir_out, cns_suite, debug):
     tbl_list = {}
     for tbl in ["contact.tbl", "ssnoe.tbl", "hbond.tbl", "dihedral.tbl"]:
         if os.path.isfile(tbl):
             tbl_list[tbl] = count_lines(tbl)
-    print(seq_fasta(fasta_file))
-    print(seq_fasta(ss_file))
+    if debug:
+        print(seq_fasta(fasta_file))
+        print(seq_fasta(ss_file))
     flag_dihe = False
     for tbl in sorted(tbl_list.keys()):
         if tbl == "dihedral.tbl":
             flag_dihe = True
-        print(coverage_tbl(fasta_file, tbl, flag_dihe))
+        if debug:
+            print(coverage_tbl(fasta_file, tbl, flag_dihe))
         flag_dihe = False
 
     for filename in glob.glob("iam.*"):
@@ -980,7 +992,8 @@ def build_models(stage, fasta_file, ss_file, contwt, sswt, mcount, mode,
     if os.path.isfile("job.sh"):
         os.remove("job.sh")
     print2file("job.sh", job_file)
-    print("Starting job [{}/{}/.job.sh > job.log]".format(dir_out, stage))
+    if debug:
+        print("Starting job [{}/{}/.job.sh > job.log]".format(dir_out, stage))
     subprocess.call("chmod +x {}/{}/job.sh".format(dir_out, stage),
                     shell=True)
     subprocess.call("{}/{}/job.sh > job.log".format(dir_out, stage),
@@ -988,6 +1001,7 @@ def build_models(stage, fasta_file, ss_file, contwt, sswt, mcount, mode,
     if os.path.isfile("iam.failed"):
         print("ERROR! Something went wrong while running CNS!")
         print("Check job.log and dgsa.log!")
+        sys.exit()
 
 
 def load_pdb(stage_dir):

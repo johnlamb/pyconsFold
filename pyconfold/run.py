@@ -1,22 +1,26 @@
 #!/usr/bin/env python3
-import os
 import argparse
-import shutil
-import glob
-import sys
 import datetime
-from ._pyconfold_helpers import check_programs,\
-                            process_parameters,\
-                            process_arguments,\
-                            build_extended, xyz_pdb,\
-                            contact_restraints, sec_restraints, build_models,\
-                            assess_dgsa, clean_output_dir
+import glob
+import os
+import shutil
+import sys
+
+from ._pyconfold_helpers import (assess_dgsa, build_extended, build_models,
+                                 check_programs, clean_output_dir,
+                                 contact_restraints, process_arguments,
+                                 process_parameters, sec_restraints, xyz_pdb)
 from ._pyconfold_libs import load_ss_restraints
 
 # program_dssp = "/home/johnlamb/bin/dssp-2.0.4-linux-amd64"
 program_dssp = os.path.join(os.path.dirname(os.path.realpath(__file__)), "dssp/dssp-2.0.4-linux-amd64")
 
 # pair=None  not implemented yet
+
+
+
+
+
 def pyconfold(fasta, ss, rr, dir_out, save_steps=False, num_top_models=5, rrtype="cb", mcount=20, selectrr="all",
               lbd=0.4, contwt=10, sswt=5, rep2=0.85, pthres=7.0, debug=False):
     # cns_suite = "<enter CNS-path here>"
@@ -78,7 +82,7 @@ def pyconfold(fasta, ss, rr, dir_out, save_steps=False, num_top_models=5, rrtype
     # sys.exit()
     shutil.copytree(os.path.join(dir_out, "input"),
                     os.path.join(dir_out, "stage1"))
-    shutil.copy(os.path.join(module_base,  "templates/gseq.inp"),
+    shutil.copy(os.path.join(module_base, "templates/gseq.inp"),
                 os.path.join(dir_out, "stage1/"))
     shutil.copy(os.path.join(module_base, "templates/extn.inp"),
                 os.path.join(dir_out, "stage1/"))
@@ -108,7 +112,6 @@ def pyconfold(fasta, ss, rr, dir_out, save_steps=False, num_top_models=5, rrtype
 
     if not os.path.isfile("extended.pdb"):
             build_extended(fasta_file, cns_suite, cns_executable)
-    sys.exit()
     defined_atoms = xyz_pdb("extended.pdb", "all")
 
     # Hydrogen or Nitrogen must be present for all atoms, in order to apply
@@ -126,34 +129,39 @@ def pyconfold(fasta, ss, rr, dir_out, save_steps=False, num_top_models=5, rrtype
     # if args.stage2:
     #     stage_list = ["stage1", "stage2"]
     # else:
+    # Stage 2 is not implemented
     stage_list = ["stage1"]
 
     for stage in stage_list:
-        if stage == "stage2":
-            os.mkdir(os.path.join(dir_out, stage))
+        # Stage 2 is not implemented
+        # if stage == "stage2":
+        #     os.mkdir(os.path.join(dir_out, stage))
 
         os.chdir(os.path.join(dir_out, stage))
 
-        print("\nStart {} job...".format(stage))
-        if stage == "stage2":
-            sys.exit()
-            for filename in glob.glob(os.path.join(dir_out, "stage1",
-                                                            "extended.*")):
-                shutil.copy(filename, ".")
-            shutil.copy(os.path.join(dir_out, "stage1", "{}.fasta".format(f_id)),
-                        ".")
-            shutil.copy(os.path.join(dir_out, "stage1", "{}.ss".format(f_id)),
-                        ".")
+        if debug:
+            print("\nStart {} job...".format(stage))
+        # Stage 2 is not implemented
+        # if stage == "stage2":
+        #     sys.exit()
+        #     for filename in glob.glob(os.path.join(dir_out, "stage1",
+        #                                                     "extended.*")):
+        #         shutil.copy(filename, ".")
+        #     shutil.copy(os.path.join(dir_out, "stage1", "{}.fasta".format(f_id)),
+        #                 ".")
+        #     shutil.copy(os.path.join(dir_out, "stage1", "{}.ss".format(f_id)),
+        #                 ".")
         # contact_restraints(stage, selectrr, args.rrtype, rr_file)
-        contact_restraints(stage, selectrr, rrtype, rr_file)
-        sec_restraints(stage, ss_file, pair_file, res_dihe, res_hbnd, res_dist,
-                       res_strnd_OO, residues, ATOMTYPE, SHIFT)
+        contact_restraints(stage, selectrr, rrtype, dir_out, rr_file)
+        sec_restraints(stage, ss_file, res_dihe, res_hbnd, res_dist,
+                       res_strnd_OO, residues, ATOMTYPE, SHIFT, debug)
         # build_models(stage, fasta_file, ss_file, args.contwt, args.sswt,
         #              args.mcount, mode, rep1, args.rep2, mini, f_id, atomselect,
         #              dir_out, cns_suite)
         build_models(stage, fasta_file, ss_file, contwt, sswt,
                      mcount, mode, rep1, rep2, mini, f_id, atomselect,
-                     dir_out, cns_suite)
+                     dir_out, cns_suite, debug)
+        sys.exit()
         # assess_dgsa(stage, fasta_file, ss_file, dir_out, args.mcount, f_id,
         #             program_dssp)
         assess_dgsa(stage, fasta_file, ss_file, dir_out, mcount, f_id, num_top_models,
