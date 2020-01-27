@@ -26,6 +26,7 @@ dist/
 
 tests/input
 tests/stage1
+mytests/
 refrun
 *.html
 *.c
