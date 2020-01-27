@@ -22,7 +22,7 @@ program_dssp = os.path.join(os.path.dirname(os.path.realpath(__file__)), "dssp/d
 
 
 def pyconfold(fasta, ss, rr, dir_out, save_steps=False, num_top_models=5, rrtype="cb", mcount=20, selectrr="all",
-              lbd=0.4, contwt=10, sswt=5, rep2=0.85, pthres=7.0, debug=False):
+              lbd=0.4, contwt=10, sswt=5, rep2=0.85, pthres=7.0, dist=False, dist_error=False, debug=False):
     # cns_suite = "<enter CNS-path here>"
     cns_suite = os.environ["CNS_SOLVE"]
     cns_executable = cns_suite + "/intel-x86_64bit-linux/bin/cns_solve"
@@ -68,7 +68,7 @@ def pyconfold(fasta, ss, rr, dir_out, save_steps=False, num_top_models=5, rrtype
     # pair  not implemented
     fasta_file, rr_file, ss_file, residues, f_id, selectrr, mini =\
             process_arguments(fasta, ss, rr, dir_out, rrtype, mcount, selectrr,
-                              lbd, contwt, sswt, rep2, pthres, debug)
+                              lbd, contwt, sswt, rep2, pthres, dist, dist_error, debug)
     # base_dir = os.path.dirname(os.path.realpath(__file__))
     # base_dir = os.getcwd()
     # print(base_dir)
@@ -152,7 +152,7 @@ def pyconfold(fasta, ss, rr, dir_out, save_steps=False, num_top_models=5, rrtype
         #     shutil.copy(os.path.join(dir_out, "stage1", "{}.ss".format(f_id)),
         #                 ".")
         # contact_restraints(stage, selectrr, args.rrtype, rr_file)
-        contact_restraints(stage, selectrr, rrtype, dir_out, rr_file)
+        contact_restraints(stage, selectrr, rrtype, dir_out, dist, dist_error, rr_file)
         sec_restraints(stage, ss_file, res_dihe, res_hbnd, res_dist,
                        res_strnd_OO, residues, ATOMTYPE, SHIFT, debug)
         # build_models(stage, fasta_file, ss_file, args.contwt, args.sswt,

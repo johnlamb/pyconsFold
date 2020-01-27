@@ -84,7 +84,7 @@ def seq_rr(rr_file, dir_out):
                 break
             elif line.startswith("END"):
                 break
-            elif re.match("^[0-9 .]+$", line):
+            elif re.match("^[0-9 -\.]+$", line):
                 break
             else:
                 seq_rr += line.strip()
@@ -129,8 +129,13 @@ def rr2contacts(rr_file, seq_sep):
                     continue
                 else:
                     # contacts.append([int(x) for x in c[:2]])
+                    # Compatability for both with and without distance errors
+                    if len(c)>5:
+                        cont = [c[3], c[5], c[6]]
+                    else:
+                        cont = [c[3]]
                     contacts[" ".join([str(int(c[0])),
-                                       str(int(c[1]))])] = int(c[3])
+                                       str(int(c[1]))])] = cont
     return contacts
 
 
@@ -151,7 +156,7 @@ def clean_output_dir(dir_out):
 
 # pair not implemented
 def process_arguments(fasta, ss, rr, dir_out, rrtype, mcount, selectrr,
-                      lbd, contwt, sswt, rep2, pthres, debug):
+                      lbd, contwt, sswt, rep2, pthres, dist, dist_error, debug):
     if not os.path.isfile(fasta):
         print("ERROR! Fasta file {} does not exist!".format(fasta))
         sys.exit()
@@ -161,6 +166,9 @@ def process_arguments(fasta, ss, rr, dir_out, rrtype, mcount, selectrr,
         sys.exit()
     if not os.path.isfile(rr):
         print("ERROR! Contact file {} does not exist!".format(fasta))
+        sys.exit()
+    if not dist and dist_error:
+        print("ERROR! Cannot use distance errors unless distance is also used")
         sys.exit()
     # if pair is not None and not os.path.isfile(pair):
     #     print("ERROR! Pair file {} does not exist!".format(pair))
@@ -572,17 +580,27 @@ def rr2r1a1r2a2(rr_file, rrtype, dir_out):
     return r1a1r2a2
 
 
-def rr2tbl(rr_file, tbl_file, rrtype, dir_out):
+def rr2tbl(rr_file, tbl_file, rrtype, dir_out, dist, dist_error):
     r1a1r2a2 = rr2r1a1r2a2(rr_file, rrtype, dir_out)
     if os.path.isfile(tbl_file):
         os.remove(tbl_file)
     to_print = []
-    for key, value in sorted(r1a1r2a2.items(), key=lambda i: i[1], reverse=True):
+    for key, value in sorted(r1a1r2a2.items(), key=lambda i: i[1][0], reverse=True):
         # print(key, "=>", r1a1r2a2[key])
         C = key.split()
-        distance = 3.60
-        negdev = 0.10
-        posdev = r1a1r2a2[key] - 3.60
+        if dist:
+            distance = value[0]
+        else:
+            distance = 3.60
+        if dist_error:
+            negdev = abs(value[1])
+            posdev = value[2]
+        else:
+            negdev = 0.10
+            posdev = distance - 3.60
+        # distance = value  #[0]
+        # negdev = value[1]
+        # posdev = value[2]
         to_print.append("assign (resid {:>3} and ".format(C[0]) +
                         "name {:>2}) ".format(C[1]) +
                         "(resid {:>3} and name {:>2}) ".format(C[2], C[3]) +
@@ -591,7 +609,7 @@ def rr2tbl(rr_file, tbl_file, rrtype, dir_out):
     print2file(tbl_file, '\n'.join(to_print) + '\n')
 
 
-def contact_restraints(stage, selectrr, rrtype, dir_out, rr_file=None):
+def contact_restraints(stage, selectrr, rrtype, dir_out, dist, dist_error, rr_file=None):
     if stage == "stage1":
         if not rr_file:
             return
@@ -611,7 +629,7 @@ def contact_restraints(stage, selectrr, rrtype, dir_out, rr_file=None):
         # subprocess.call("mv temp.rr {}".format(rr_file), shell=True)
         os.remove(rr_file)
         print2file(rr_file, ''.join(rr_data))
-        rr2tbl(rr_file, "contact.tbl", rrtype, dir_out)
+        rr2tbl(rr_file, "contact.tbl", rrtype, dir_out, dist, dist_error)
 
 
 def print_helix_restraints(ss_file, residues, log_file, res_dihe,

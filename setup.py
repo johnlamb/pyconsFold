@@ -8,7 +8,7 @@ setuptools.setup(
         version="0.0.1",
         author="John Lamb",
         author_email="john@biolamb.se",
-        description="A python implementation of the confold CNS-wrapper",
+        description="A python implementation of the CONFOLD CNS-wrapper",
         long_description=long_description,
         long_description_content_type="text/markdown",
         url="https://github.com/johnlamb/pyconfold",
@@ -20,4 +20,5 @@ setuptools.setup(
             "License :: OSI Approved :: GPLv3",
             "Operating System :: OS Independent",
             ],
+        python_requires='>3.5',
         )
