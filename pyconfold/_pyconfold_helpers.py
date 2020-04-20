@@ -131,9 +131,9 @@ def rr2contacts(rr_file, seq_sep):
                     # contacts.append([int(x) for x in c[:2]])
                     # Compatability for both with and without distance errors
                     if len(c)>5:
-                        cont = [c[3], c[5], c[6]]
+                        cont = [c[3], c[4], c[5]]
                     else:
-                        cont = [c[3]]
+                        cont = [c[3], c[4]]
                     contacts[" ".join([str(int(c[0])),
                                        str(int(c[1]))])] = cont
     return contacts
@@ -239,7 +239,7 @@ def process_arguments(fasta, ss, rr, dir_out, rrtype, mcount, selectrr,
     rr_seq = seq_rr(rr_file, dir_out)
     if not seq == rr_seq:
         print("ERROR! Fasta and rr sequence do not match!" +
-              "\nFasta\t: {} \nRR\t:{}".format(seq, rr_seq))
+              "\nFasta\t: {} \nRR\t: {}".format(seq, rr_seq))
         clean_output_dir(dir_out)
         sys.exit()
 
@@ -585,19 +585,19 @@ def rr2tbl(rr_file, tbl_file, rrtype, dir_out, dist, dist_error):
     if os.path.isfile(tbl_file):
         os.remove(tbl_file)
     to_print = []
-    for key, value in sorted(r1a1r2a2.items(), key=lambda i: i[1][0], reverse=True):
+    for key, value in sorted(r1a1r2a2.items(), key=lambda i: i[1][1], reverse=True):
         # print(key, "=>", r1a1r2a2[key])
         C = key.split()
-        if dist:
-            distance = value[0]
-        else:
-            distance = 3.60
+        distance = 8
         if dist_error:
-            negdev = abs(value[1])
-            posdev = value[2]
+            negdev = posdev = value[2]
         else:
             negdev = 0.10
             posdev = distance - 3.60
+        if dist:
+            distance = value[0]
+        else:
+            distance = 3.6
         # distance = value  #[0]
         # negdev = value[1]
         # posdev = value[2]
