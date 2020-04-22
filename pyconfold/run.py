@@ -9,8 +9,10 @@ import sys
 from ._pyconfold_helpers import (assess_dgsa, build_extended, build_models,
                                  check_programs, clean_output_dir,
                                  contact_restraints, process_arguments,
-                                 process_parameters, sec_restraints, xyz_pdb)
+                                 sec_restraints, xyz_pdb)
 from ._pyconfold_libs import load_ss_restraints
+
+from ._arguments import get_args
 
 # program_dssp = "/home/johnlamb/bin/dssp-2.0.4-linux-amd64"
 program_dssp = os.path.join(os.path.dirname(os.path.realpath(__file__)), "dssp/dssp-2.0.4-linux-amd64")
@@ -18,40 +20,20 @@ program_dssp = os.path.join(os.path.dirname(os.path.realpath(__file__)), "dssp/d
 # pair=None  not implemented yet
 
 
-
-
-
-def pyconfold(fasta, ss, rr, dir_out, save_steps=False, num_top_models=5, rrtype="cb", mcount=20, selectrr="all",
-              lbd=0.4, contwt=10, sswt=5, rep2=0.85, pthres=7.0, dist=False, dist_error=False, debug=False):
+# def pyconfold(fasta, ss, rr, dir_out, save_steps=False, num_top_models=5, rrtype="cb", mcount=20, selectrr="all",
+#               lbd=0.4, contwt=10, sswt=5, rep2=0.85, pthres=7.0, dist=False, dist_error=False, debug=False):
+def pyconfold():
+    debug = False
     # cns_suite = "<enter CNS-path here>"
     cns_suite = os.environ["CNS_SOLVE"]
     cns_executable = cns_suite + "/intel-x86_64bit-linux/bin/cns_solve"
 
-    # parser = argparse.ArgumentParser(description="Parse Confold arguments")
-    # parser.add_argument("fasta", help="Input fasta file")
-    # parser.add_argument("ss", help="Secondary structure file")
-    # parser.add_argument("rr", help="Contact file")
-    # parser.add_argument("dir_out", help="Output directory")
-    # # parser.add_argument("-pair", help="Pair file")
-    # parser.add_argument("-rrtype", default="cb", choices=["ca", "cb"],
-    #                     help="Contact type")
-    # # parser.add_argument("-stage2", default=0, type=int, choices=range(0, 4),
-    # #                     help="Run stage 2")
-    # parser.add_argument("-mcount", default=20, type=int, help="Model count")
-    # parser.add_argument("-selectrr", default="all", help="Contacts to use")
-    # parser.add_argument("-lbd", default=0.4, type=float, help="Lambda")
-    # parser.add_argument("-contwt", default=10, type=float,
-    #                     help="Contact restraint weights")
-    # parser.add_argument("-sswt", default=5, type=float,
-    #                     help="SS restraint weight")
-    # parser.add_argument("-rep2", default=0.85, type=float, help="Rep2")
-    # parser.add_argument("-pthres", default=7.0, type=float, help="Threshold")
-    # args = parser.parse_args()
+    args = get_args()
 
     rep1 = 1.0
     mini = 0
     # pthres_hbond = args.pthres + 3.0
-    pthres_hbond = pthres + 3.0
+    pthres_hbond = args.pthres + 3.0
     atomselect = 2
     mode = "trial"
 
@@ -60,15 +42,25 @@ def pyconfold(fasta, ss, rr, dir_out, save_steps=False, num_top_models=5, rrtype
 
     base_dir = os.getcwd()
     # dir_out = os.path.join(base_dir, args.dir_out)
-    dir_out = os.path.join(base_dir, dir_out)
+    dir_out = os.path.join(base_dir, args.out_dir)
 
     check_programs(program_dssp, cns_suite, cns_executable)
     # fasta_file, rr_file, ss_file, pair_file, residues, f_id, selectrr, mini =\
     #         process_parameters(args)
     # pair  not implemented
+    if not os.path.isfile(args.fasta):
+        print("ERROR! Fasta file {} does not exist!".format(args.fasta))
+        sys.exit()
+    if not os.path.isfile(args.ss):
+        print("ERROR! Secondary structure file {} " +
+              "does not exist!".format(args.ss))
+        sys.exit()
+    if not os.path.isfile(args.rr):
+        print("ERROR! Contact file {} does not exist!".format(args.rr))
+        sys.exit()
     fasta_file, rr_file, ss_file, residues, f_id, selectrr, mini =\
-            process_arguments(fasta, ss, rr, dir_out, rrtype, mcount, selectrr,
-                              lbd, contwt, sswt, rep2, pthres, dist, dist_error, debug)
+            process_arguments(args.fasta, args.ss, args.rr, args.out_dir, args.rr_type, args.model_count, args.select_rr,
+                              args.lbd, args.contwt, args.sswt, args.rep2, args.pthres, args.dist, debug)
     # base_dir = os.path.dirname(os.path.realpath(__file__))
     # base_dir = os.getcwd()
     # print(base_dir)
@@ -99,7 +91,7 @@ def pyconfold(fasta, ss, rr, dir_out, save_steps=False, num_top_models=5, rrtype
     # res_dihe, res_strnd_OO, res_dist, res_hbnd =\
     #         load_ss_restraints(args.lbd, "ssrestraints.log")
     res_dihe, res_strnd_OO, res_dist, res_hbnd =\
-            load_ss_restraints(lbd, "ssrestraints.log")
+            load_ss_restraints(args.lbd, "ssrestraints.log")
 
     # print("\nStart [{}]: {}".format(parser.prog,
     #                                 datetime.datetime.now().
@@ -152,22 +144,21 @@ def pyconfold(fasta, ss, rr, dir_out, save_steps=False, num_top_models=5, rrtype
         #     shutil.copy(os.path.join(dir_out, "stage1", "{}.ss".format(f_id)),
         #                 ".")
         # contact_restraints(stage, selectrr, args.rrtype, rr_file)
-        contact_restraints(stage, selectrr, rrtype, dir_out, dist, dist_error, rr_file)
+        contact_restraints(stage, selectrr, args.rr_type, dir_out, args.dist, rr_file)
         sec_restraints(stage, ss_file, res_dihe, res_hbnd, res_dist,
                        res_strnd_OO, residues, ATOMTYPE, SHIFT, debug)
         # build_models(stage, fasta_file, ss_file, args.contwt, args.sswt,
         #              args.mcount, mode, rep1, args.rep2, mini, f_id, atomselect,
         #              dir_out, cns_suite)
-        build_models(stage, fasta_file, ss_file, contwt, sswt,
-                     mcount, mode, rep1, rep2, mini, f_id, atomselect,
+        build_models(stage, fasta_file, ss_file, args.contwt, args.sswt,
+                     args.model_count, mode, rep1, args.rep2, mini, f_id, atomselect,
                      dir_out, cns_suite, debug)
-        sys.exit()
         # assess_dgsa(stage, fasta_file, ss_file, dir_out, args.mcount, f_id,
         #             program_dssp)
-        assess_dgsa(stage, fasta_file, ss_file, dir_out, mcount, f_id, num_top_models,
+        assess_dgsa(stage, fasta_file, ss_file, dir_out, args.model_count, f_id, args.top_models,
                     program_dssp)
 
-    if not save_steps:
+    if not args.sstep:
         clean_output_dir(dir_out)
 
     # print("\nFinished [{}]: {}".format(parser.prog,
