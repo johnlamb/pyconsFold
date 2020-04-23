@@ -451,12 +451,12 @@ def rr2tbl(rr_file, tbl_file, rrtype, dir_out, dist):
     for key, value in sorted(r1a1r2a2.items(), key=lambda i: i[1][1], reverse=True):
         # print(key, "=>", r1a1r2a2[key])
         C = key.split()
-        distance = 8
         if dist:
             negdev = posdev = value[2]
         else:
             negdev = 0.10
-            posdev = distance - 3.60
+            # Assuming less than 8Å is a contact
+            posdev = 8 - 3.60
         if dist:
             distance = value[0]
         else:
