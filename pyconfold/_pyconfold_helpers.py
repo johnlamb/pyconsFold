@@ -176,8 +176,8 @@ def process_arguments(fasta, ss, rr, dir_out, rrtype, mcount, selectrr,
     f_id = os.path.splitext(os.path.basename(fasta))[0]
 
     selectrr = selectrr.replace("L", "")
-    selectrr = 100000 if selectrr == "all" else int(float(selectrr) * L + 0.5)
-    if not (selectrr > 0 and selectrr <= 100000):
+    selectrr = 10000000 if selectrr == "all" else int(float(selectrr) * L + 0.5)
+    if not (selectrr > 0 and selectrr <= 10000000):
         print("ERROR! Selectrr option does not " +
               "look right: {}".format(selectrr))
         sys.exit()
