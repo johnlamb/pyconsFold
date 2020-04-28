@@ -176,8 +176,8 @@ def process_arguments(fasta, ss, rr, dir_out, rrtype, mcount, selectrr,
     f_id = os.path.splitext(os.path.basename(fasta))[0]
 
     selectrr = selectrr.replace("L", "")
-    selectrr = 100000 if selectrr == "all" else int(float(selectrr) * L + 0.5)
-    if not (selectrr > 0 and selectrr <= 100000):
+    selectrr = 10000000 if selectrr == "all" else int(float(selectrr) * L + 0.5)
+    if not (selectrr > 0 and selectrr <= 10000000):
         print("ERROR! Selectrr option does not " +
               "look right: {}".format(selectrr))
         sys.exit()
@@ -347,7 +347,9 @@ def build_extended(fasta_file, cns_suite, cns_executable):
     st = os.stat("job.sh")
     os.chmod("job.sh", st.st_mode | stat.S_IEXEC)
     # subprocess.call("chmod +x job.sh", shell=True)
-    subprocess.call("./job.sh &> job.log", shell=True)
+    # subprocess.call("./job.sh &> job.log", shell=True)
+    ######### No shell, does not work on Keb #############
+    subprocess.call("./job.sh")
     if not os.path.isfile("extended.pdb"):
         print("FAILED! extended.pdb not found")
         sys.exit()
