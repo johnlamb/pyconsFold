@@ -9,6 +9,7 @@ def get_args():
     
     parser.add_argument("-d", "--dist", type=bool, default=False, help="Use predicted distance and error, must use a compatible RR-file")
 
+    parser.add_argument("-noss", "--noss", type=bool, default=False, help="Run without secondary structure")
     parser.add_argument("-ss", "--sstep", type=bool, default=False, help="Save step, on or off")
     parser.add_argument("-tm", "--top_models", type=int, default=5, help="Number of top models selected(from the potentials)")
     parser.add_argument("-rrt", "--rr_type", type=str, default="cb", choices=["ca","cb"], help="Contact type")

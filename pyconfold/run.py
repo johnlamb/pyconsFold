@@ -15,10 +15,10 @@ from ._pyconfold_libs import load_ss_restraints
 from ._arguments import get_args
 
 ################## Default dssp ########################################
-# program_dssp = os.path.join(os.path.dirname(os.path.realpath(__file__)), "dssp/dssp-2.0.4-linux-amd64")
+program_dssp = os.path.join(os.path.dirname(os.path.realpath(__file__)), "dssp/dssp-2.0.4-linux-amd64")
 ########## The following three for Keb #################################
-program_dssp = "/pfs/nobackup/home/m/mircomic/dssp-2.0.4-linux-amd64"
-cns_suite = "/pfs/nobackup/home/m/mircomic/CNS/cns_solve_1.3"
+# program_dssp = "/pfs/nobackup/home/m/mircomic/dssp-2.0.4-linux-amd64"
+# cns_suite = "/pfs/nobackup/home/m/mircomic/CNS/cns_solve_1.3"
 ########################################################################
 # pair=None  not implemented yet
 
@@ -28,7 +28,7 @@ cns_suite = "/pfs/nobackup/home/m/mircomic/CNS/cns_solve_1.3"
 def pyconfold(debug=False):
     ########## CNS path, defaults, comment for Keb #################
     # cns_suite = "<enter CNS-path here>"
-    # cns_suite = os.environ["CNS_SOLVE"]
+    cns_suite = os.environ["CNS_SOLVE"]
     cns_executable = cns_suite + "/intel-x86_64bit-linux/bin/cns_solve"
 
     args = get_args()
@@ -148,8 +148,9 @@ def pyconfold(debug=False):
         #                 ".")
         # contact_restraints(stage, selectrr, args.rrtype, rr_file)
         contact_restraints(stage, selectrr, args.rr_type, dir_out, args.dist, rr_file)
-        sec_restraints(stage, ss_file, res_dihe, res_hbnd, res_dist,
-                       res_strnd_OO, residues, ATOMTYPE, SHIFT, debug)
+        if not args.noss:
+            sec_restraints(stage, ss_file, res_dihe, res_hbnd, res_dist,
+                           res_strnd_OO, residues, ATOMTYPE, SHIFT, debug)
         # build_models(stage, fasta_file, ss_file, args.contwt, args.sswt,
         #              args.mcount, mode, rep1, args.rep2, mini, f_id, atomselect,
         #              dir_out, cns_suite)
