@@ -159,7 +159,7 @@ def pyconfold(debug=False):
         # assess_dgsa(stage, fasta_file, ss_file, dir_out, args.mcount, f_id,
         #             program_dssp)
         assess_dgsa(stage, fasta_file, ss_file, dir_out, args.model_count, f_id, args.top_models,
-                    program_dssp)
+                    program_dssp, debug)
 
     if not args.sstep:
         clean_output_dir(dir_out)
