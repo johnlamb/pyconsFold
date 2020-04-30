@@ -139,6 +139,25 @@ def rr2contacts(rr_file, seq_sep):
     return contacts
 
 
+def omega2contacts(omega_file, seq_sep):
+    contacts = {}
+    with open(omega_file) as omega_handle:
+        for line in omega_handle:
+            if not re.match("^[0-9]", line):
+                continue
+            else:
+                c = [float(x) for x in line.split()]
+                if abs(c[1]-c[0]) < seq_sep:
+                    continue
+                else:
+                    # contacts.append([int(x) for x in c[:2]])
+                    # Compatability for both with and without distance errors
+                    cont = [c[3], c[4], c[5]]
+                    contacts[" ".join([str(int(c[0])),
+                                       str(int(c[1]))])] = cont
+    return contacts
+
+
 def chk_errors_seq(seq, dir_out):
     for res in seq:
         if res not in AA1TO3:
@@ -155,7 +174,7 @@ def clean_output_dir(dir_out):
 
 
 # pair not implemented
-def process_arguments(fasta, ss, rr, dir_out, rrtype, mcount, selectrr,
+def process_arguments(fasta, ss, rr, dir_out, rrtype, omega, mcount, selectrr,
                       lbd, contwt, sswt, rep2, pthres, dist, debug):
     if not os.path.isfile(fasta):
         print("ERROR! Fasta file {} does not exist!".format(fasta))
@@ -216,6 +235,7 @@ def process_arguments(fasta, ss, rr, dir_out, rrtype, mcount, selectrr,
     fasta_file = f_id + ".fasta"
     rr_file = f_id + ".rr"
     ss_file = f_id + ".ss"
+    omega_file = f_id + ".omega"
     # pair_file = None
     # if pair is not None:
     #     pair_file = f_id + ".pair"
@@ -224,6 +244,7 @@ def process_arguments(fasta, ss, rr, dir_out, rrtype, mcount, selectrr,
     shutil.copy(fasta, dir_out + "/input/" + fasta_file)
     shutil.copy(rr, dir_out + "/input/" + rr_file)
     shutil.copy(ss, dir_out + "/input/" + ss_file)
+    shutil.copy(omega, dir_out + "/input/" + omega_file)
 
     base_dir = os.path.dirname(os.path.realpath(__file__))
     os.chdir(dir_out + "/input")
@@ -307,6 +328,7 @@ def process_arguments(fasta, ss, rr, dir_out, rrtype, mcount, selectrr,
         print("fasta_file   {}".format(fasta_file))
         print("rr_file      {}".format(rr_file))
         print("ss_file      {}".format(ss_file))
+        print("omega_file      {}".format(omega_file))
         print("selectrr     {}".format(selectrr))
         print("rrtype       {}".format(rrtype))
         # print(lbd)
@@ -315,7 +337,7 @@ def process_arguments(fasta, ss, rr, dir_out, rrtype, mcount, selectrr,
         print("sequence     {}".format(seq))
         print("ss_seq       {}".format(ss_seq))
     # pair_file
-    return fasta_file, rr_file, ss_file, residues,\
+    return fasta_file, rr_file, ss_file, omega_file, residues,\
         f_id, selectrr, mini
 
 
@@ -495,6 +517,51 @@ def contact_restraints(stage, selectrr, rrtype, dir_out, dist, rr_file=None):
         os.remove(rr_file)
         print2file(rr_file, ''.join(rr_data))
         rr2tbl(rr_file, "contact.tbl", rrtype, dir_out, dist)
+
+
+def omega_restraints(omega_file, residues, seq_sep=1):
+    dihedral_file = "dihedral.tbl"
+    omega_contacts = omega2contacts(omega_file, seq_sep)
+    dihedral_to_write = []
+    n = 0
+    for key, value in sorted(omega_contacts.items(), key=lambda i: i[1][1], reverse=True):
+        i, j = key.split()
+        # If one of the residues is Glycine, move along
+        if 'G' in (residues[int(i)] + residues[int(j)]):
+            continue
+        angle_mean, prob, angle_error = value
+
+        dihedral_to_write.append(("assign (resid {:>3} and name ca) " +
+                                  "(resid {:>3} and name  cb) (resid" +
+                                  " {:>3} and name cb) (resid {:>3}" +
+                                  " and name ca) 1.0 {:>7} {:>7} 2")
+                                  .format(i, i, j, j, angle_mean, angle_error))
+        n += 1
+        if n > 250:
+            break
+
+    # if res_sec:
+    #     log_to_write = "write helix tbl restrains"
+    #     dihedral_to_write = []
+    #     hbnd_to_write = []
+    #     for i in sorted(res_sec.keys()):
+    #         PHI = res_dihe["H PHI"].split()
+    #         PSI = res_dihe["H PSI"].split()
+    #         if i-1 in residues.keys():
+    #             dihedral_to_write.append(("assign (resid {:>3} and name c) " +
+    #                                       "(resid {:>3} and name  n) (resid" +
+    #                                       " {:>3} and name ca) (resid {:>3}" +
+    #                                       " and name c) 5.0 {:>7} {:>7} 2 " +
+    #                                       "!helix phi")
+    #                                      .format(i-1, i, i, i, PHI[0], PHI[1]))
+    #         if i+1 in residues.keys():
+    #             dihedral_to_write.append(("assign (resid {:>3} and name n) " +
+    #                                       "(resid {:>3} and name ca) (resid" +
+    #                                       " {:>3} and name  c) (resid {:>3}" +
+    #                                       " and name n) 5.0 {:>7} {:>7} 2 " +
+    #                                       "!helix psi")
+    #                                      .format(i, i, i, i+1, PSI[0], PSI[1]))
+    print2file(dihedral_file, "\n".join(dihedral_to_write))
 
 
 def print_helix_restraints(ss_file, residues, log_file, res_dihe,
@@ -1062,32 +1129,33 @@ def count_satisfied_tbl_rows(pdb, tbl_file, tbl_type, program_dssp):
     total = 0
     log_rows = {}
     if tbl_type == "dihedral":
-        noe = tbl2rows(tbl_file)
-        phi = dssp_result(pdb, "phi", program_dssp)
-        psi = dssp_result(pdb, "psi", program_dssp)
-        for key in noe.keys():
-            C = key.strip().split()
-            angle_true = 0.0
-            if C[5].upper() == "C" and C[10].upper() == "N" and\
-               C[15].upper() == "CA" and C[20].upper() == "C":
-                angle_true = float(phi[int(C[2])])
-            elif C[5].upper() == "N" and C[10].upper() == "CA"\
-                    and C[15].upper() == "C" and C[20].upper() == "N":
-                angle_true = float(psi[int(C[2])])
-            else:
-                print("Undefined dihedral angle")
-                sys.exit()
-            viol_flag = 1
-            d = abs(angle_true - float(C[22]))
-            d = abs(360.0 - d) if d > 180 else d
-            if d < (float(C[23]) + 2.0):
-                count += 1
-                viol_flag = 0
-            total += 1
+        pass
+        # noe = tbl2rows(tbl_file)
+        # phi = dssp_result(pdb, "phi", program_dssp)
+        # psi = dssp_result(pdb, "psi", program_dssp)
+        # for key in noe.keys():
+        #     C = key.strip().split()
+        #     angle_true = 0.0
+        #     if C[5].upper() == "C" and C[10].upper() == "N" and\
+        #        C[15].upper() == "CA" and C[20].upper() == "C":
+        #         angle_true = float(phi[int(C[2])])
+        #     elif C[5].upper() == "N" and C[10].upper() == "CA"\
+        #             and C[15].upper() == "C" and C[20].upper() == "N":
+        #         angle_true = float(psi[int(C[2])])
+        #     else:
+        #         print("Undefined dihedral angle")
+        #         sys.exit()
+        #     viol_flag = 1
+        #     d = abs(angle_true - float(C[22]))
+        #     d = abs(360.0 - d) if d > 180 else d
+        #     if d < (float(C[23]) + 2.0):
+        #         count += 1
+        #         viol_flag = 0
+        #     total += 1
 
-            log_rows["{:>3}\t{:.2f}\t{:.2f} # {}".format(viol_flag, d,
-                                                         angle_true, key)] =\
-                viol_flag
+        #     log_rows["{:>3}\t{:.2f}\t{:.2f} # {}".format(viol_flag, d,
+        #                                                  angle_true, key)] =\
+        #         viol_flag
     else:
         tbl_hash = ssnoe_tbl_min_pdb_dist(tbl_file, pdb)
         for key in sorted(tbl_hash.keys()):

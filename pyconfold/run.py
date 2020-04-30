@@ -9,7 +9,7 @@ import sys
 from ._pyconfold_helpers import (assess_dgsa, build_extended, build_models,
                                  check_programs, clean_output_dir,
                                  contact_restraints, process_arguments,
-                                 sec_restraints, xyz_pdb)
+                                 sec_restraints, xyz_pdb, omega_restraints)
 from ._pyconfold_libs import load_ss_restraints
 
 from ._arguments import get_args
@@ -61,8 +61,9 @@ def pyconfold(debug=False):
     if not os.path.isfile(args.rr):
         print("ERROR! Contact file {} does not exist!".format(args.rr))
         sys.exit()
-    fasta_file, rr_file, ss_file, residues, f_id, selectrr, mini =\
-            process_arguments(args.fasta, args.ss, args.rr, args.out_dir, args.rr_type, args.model_count, args.select_rr,
+
+    fasta_file, rr_file, ss_file, omega_file, residues, f_id, selectrr, mini =\
+            process_arguments(args.fasta, args.ss, args.rr, args.out_dir, args.rr_type, args.omega, args.model_count, args.select_rr,
                               args.lbd, args.contwt, args.sswt, args.rep2, args.pthres, args.dist, debug)
     # base_dir = os.path.dirname(os.path.realpath(__file__))
     # base_dir = os.getcwd()
@@ -151,6 +152,8 @@ def pyconfold(debug=False):
         if not args.noss:
             sec_restraints(stage, ss_file, res_dihe, res_hbnd, res_dist,
                            res_strnd_OO, residues, ATOMTYPE, SHIFT, debug)
+
+        omega_restraints(omega_file, residues)
         # build_models(stage, fasta_file, ss_file, args.contwt, args.sswt,
         #              args.mcount, mode, rep1, args.rep2, mini, f_id, atomselect,
         #              dir_out, cns_suite)
