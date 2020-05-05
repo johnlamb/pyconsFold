@@ -537,7 +537,7 @@ def omega_restraints(omega_file, residues, seq_sep=1):
                                   " and name ca) 1.0 {:>7} {:>7} 2")
                                   .format(i, i, j, j, angle_mean, angle_error))
         n += 1
-        if n > 250:
+        if n > 1500:
             break
 
     # if res_sec:
