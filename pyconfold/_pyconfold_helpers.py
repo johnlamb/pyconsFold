@@ -175,7 +175,7 @@ def clean_output_dir(dir_out):
 
 # pair not implemented
 def process_arguments(fasta, ss, rr, dir_out, rrtype, omega, theta, mcount, selectrr,
-                      lbd, contwt, sswt, rep2, pthres, dist, debug):
+                      lbd, contwt, sswt, rep2, pthres, dist, debug, rr_pthres):
     if not os.path.isfile(fasta):
         print("ERROR! Fasta file {} does not exist!".format(fasta))
         sys.exit()
@@ -290,7 +290,7 @@ def process_arguments(fasta, ss, rr, dir_out, rrtype, omega, theta, mcount, sele
             continue
         rr_lines.append(line.strip().split())
     rr_lines.sort(key=lambda x: float(x[4]), reverse=True)
-    rr_scores = '\n'.join([' '.join(x) for x in rr_lines])
+    rr_scores = '\n'.join([' '.join(x) for x in rr_lines if float(x[4]) > rr_pthres])
 
     # for line in rr_lines:
     # print(len(rr_lines))

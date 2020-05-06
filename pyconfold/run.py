@@ -64,7 +64,7 @@ def pyconfold(debug=False):
 
     fasta_file, rr_file, ss_file, omega_file, theta_file, residues, f_id, selectrr, mini =\
             process_arguments(args.fasta, args.ss, args.rr, args.out_dir, args.rr_type, args.omega, args.theta, args.model_count, args.select_rr,
-                              args.lbd, args.contwt, args.sswt, args.rep2, args.pthres, args.dist, debug)
+                              args.lbd, args.contwt, args.sswt, args.rep2, args.pthres, args.dist, debug, args.rr_pthres)
     # base_dir = os.path.dirname(os.path.realpath(__file__))
     # base_dir = os.getcwd()
     # print(base_dir)
@@ -152,8 +152,9 @@ def pyconfold(debug=False):
         if not args.noss:
             sec_restraints(stage, ss_file, res_dihe, res_hbnd, res_dist,
                            res_strnd_OO, residues, ATOMTYPE, SHIFT, debug)
-
-        angle_restraints(omega_file, theta_file, residues)
+        ###############################################################
+        # angle_restraints(omega_file, theta_file, residues)
+        ###############################################################
         # build_models(stage, fasta_file, ss_file, args.contwt, args.sswt,
         #              args.mcount, mode, rep1, args.rep2, mini, f_id, atomselect,
         #              dir_out, cns_suite)

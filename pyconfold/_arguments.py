@@ -22,6 +22,7 @@ def get_args():
     parser.add_argument("-sswt", type=float, default=5, help="SS restraint weight")
     parser.add_argument("-rep2", type=float, default=0.85, help="Rep2")
     parser.add_argument("-pthres", type=float, default=7.5, help="Threshold")
+    parser.add_argument("-rr_pthres", type=float, default=0, help="RR Threshold")
 
     args = parser.parse_args()
 
