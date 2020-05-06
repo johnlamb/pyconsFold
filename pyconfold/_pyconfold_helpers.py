@@ -139,10 +139,10 @@ def rr2contacts(rr_file, seq_sep):
     return contacts
 
 
-def omega2contacts(omega_file, seq_sep):
+def angle2restraints(angle_file, seq_sep):
     contacts = {}
-    with open(omega_file) as omega_handle:
-        for line in omega_handle:
+    with open(angle_file) as angle_handle:
+        for line in angle_handle:
             if not re.match("^[0-9]", line):
                 continue
             else:
@@ -174,7 +174,7 @@ def clean_output_dir(dir_out):
 
 
 # pair not implemented
-def process_arguments(fasta, ss, rr, dir_out, rrtype, omega, mcount, selectrr,
+def process_arguments(fasta, ss, rr, dir_out, rrtype, omega, theta, mcount, selectrr,
                       lbd, contwt, sswt, rep2, pthres, dist, debug):
     if not os.path.isfile(fasta):
         print("ERROR! Fasta file {} does not exist!".format(fasta))
@@ -236,6 +236,7 @@ def process_arguments(fasta, ss, rr, dir_out, rrtype, omega, mcount, selectrr,
     rr_file = f_id + ".rr"
     ss_file = f_id + ".ss"
     omega_file = f_id + ".omega"
+    theta_file = f_id + ".theta"
     # pair_file = None
     # if pair is not None:
     #     pair_file = f_id + ".pair"
@@ -245,6 +246,7 @@ def process_arguments(fasta, ss, rr, dir_out, rrtype, omega, mcount, selectrr,
     shutil.copy(rr, dir_out + "/input/" + rr_file)
     shutil.copy(ss, dir_out + "/input/" + ss_file)
     shutil.copy(omega, dir_out + "/input/" + omega_file)
+    shutil.copy(theta, dir_out + "/input/" + theta_file)
 
     base_dir = os.path.dirname(os.path.realpath(__file__))
     os.chdir(dir_out + "/input")
@@ -328,7 +330,8 @@ def process_arguments(fasta, ss, rr, dir_out, rrtype, omega, mcount, selectrr,
         print("fasta_file   {}".format(fasta_file))
         print("rr_file      {}".format(rr_file))
         print("ss_file      {}".format(ss_file))
-        print("omega_file      {}".format(omega_file))
+        print("omega_file   {}".format(omega_file))
+        print("theta_file   {}".format(theta_file))
         print("selectrr     {}".format(selectrr))
         print("rrtype       {}".format(rrtype))
         # print(lbd)
@@ -337,7 +340,7 @@ def process_arguments(fasta, ss, rr, dir_out, rrtype, omega, mcount, selectrr,
         print("sequence     {}".format(seq))
         print("ss_seq       {}".format(ss_seq))
     # pair_file
-    return fasta_file, rr_file, ss_file, omega_file, residues,\
+    return fasta_file, rr_file, ss_file, omega_file, theta_file, residues,\
         f_id, selectrr, mini
 
 
@@ -519,12 +522,19 @@ def contact_restraints(stage, selectrr, rrtype, dir_out, dist, rr_file=None):
         rr2tbl(rr_file, "contact.tbl", rrtype, dir_out, dist)
 
 
-def omega_restraints(omega_file, residues, seq_sep=1):
+def angle_restraints(omega_file, theta_file, residues, seq_sep=1):
     dihedral_file = "dihedral.tbl"
-    omega_contacts = omega2contacts(omega_file, seq_sep)
+    # print(theta_file)
+    omega_contacts = angle2restraints(omega_file, seq_sep)
+    theta_contacts = angle2restraints(theta_file, seq_sep)
     dihedral_to_write = []
-    n = 0
-    for key, value in sorted(omega_contacts.items(), key=lambda i: i[1][1], reverse=True):
+    # n = 0
+    mixed_contacts = sorted(omega_contacts.items(), key=lambda i: i[1][1], reverse=True)[:500]
+    mixed_contacts.extend(sorted(theta_contacts.items(), key=lambda i: i[1][1], reverse=True)[:500])
+    # extend(sorted(theta_contacts.items(), key=lambda i: i[1][1], reverse=True)[:500])
+
+    # Sort again, all angles mixed
+    for key, value in sorted(mixed_contacts, key=lambda i: i[1][1], reverse=True):
         i, j = key.split()
         # If one of the residues is Glycine, move along
         if 'G' in (residues[int(i)] + residues[int(j)]):
@@ -536,10 +546,7 @@ def omega_restraints(omega_file, residues, seq_sep=1):
                                   " {:>3} and name cb) (resid {:>3}" +
                                   " and name ca) 1.0 {:>7} {:>7} 2")
                                   .format(i, i, j, j, angle_mean, angle_error))
-        n += 1
-        if n > 1500:
-            break
-
+        # n += 1
     # if res_sec:
     #     log_to_write = "write helix tbl restrains"
     #     dihedral_to_write = []
