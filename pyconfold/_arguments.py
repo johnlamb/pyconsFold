@@ -9,8 +9,8 @@ def get_args():
     
     parser.add_argument("-d", "--dist", type=bool, default=False, help="Use predicted distance and error, must use a compatible RR-file")
 
-    parser.add_argument("-om", "--omega", type=str, help="Omega angles file in CASP format")
-    parser.add_argument("-th", "--theta", type=str, help="Theta angles file in CASP format")
+    parser.add_argument("-om", "--omega", type=str, default="", help="Omega angles file in CASP format")
+    parser.add_argument("-th", "--theta", type=str, default="", help="Theta angles file in CASP format")
     parser.add_argument("-noss", "--noss", type=bool, default=False, help="Run without secondary structure")
     parser.add_argument("-ss", "--sstep", type=bool, default=False, help="Save step, on or off")
     parser.add_argument("-tm", "--top_models", type=int, default=5, help="Number of top models selected(from the potentials)")
