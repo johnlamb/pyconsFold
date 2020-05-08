@@ -235,8 +235,8 @@ def process_arguments(fasta, ss, rr, dir_out, rrtype, omega, theta, mcount, sele
     fasta_file = f_id + ".fasta"
     rr_file = f_id + ".rr"
     ss_file = f_id + ".ss"
-    # omega_file = f_id + ".omega"
-    # theta_file = f_id + ".theta"
+    omega_file = f_id + ".omega"
+    theta_file = f_id + ".theta"
     # pair_file = None
     # if pair is not None:
     #     pair_file = f_id + ".pair"
