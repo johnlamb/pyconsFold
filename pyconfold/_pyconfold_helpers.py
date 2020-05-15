@@ -245,8 +245,8 @@ def process_arguments(fasta, ss, rr, dir_out, rrtype, omega, theta, mcount, sele
     shutil.copy(fasta, dir_out + "/input/" + fasta_file)
     shutil.copy(rr, dir_out + "/input/" + rr_file)
     shutil.copy(ss, dir_out + "/input/" + ss_file)
-    # shutil.copy(omega, dir_out + "/input/" + omega_file)
-    # shutil.copy(theta, dir_out + "/input/" + theta_file)
+    shutil.copy(omega, dir_out + "/input/" + omega_file)
+    shutil.copy(theta, dir_out + "/input/" + theta_file)
 
     base_dir = os.path.dirname(os.path.realpath(__file__))
     os.chdir(dir_out + "/input")
@@ -528,9 +528,9 @@ def angle_restraints(omega_file, theta_file, residues, seq_sep=1):
     omega_contacts = angle2restraints(omega_file, seq_sep)
     theta_contacts = angle2restraints(theta_file, seq_sep)
     dihedral_to_write = []
-    # n = 0
-    mixed_contacts = sorted(omega_contacts.items(), key=lambda i: i[1][1], reverse=True)[:500]
-    mixed_contacts.extend(sorted(theta_contacts.items(), key=lambda i: i[1][1], reverse=True)[:500])
+    n = 0
+    mixed_contacts = sorted(omega_contacts.items(), key=lambda i: i[1][1], reverse=True)  # [:500]
+    mixed_contacts.extend(sorted(theta_contacts.items(), key=lambda i: i[1][1], reverse=True))  # [:500])
     # extend(sorted(theta_contacts.items(), key=lambda i: i[1][1], reverse=True)[:500])
 
     # Sort again, all angles mixed
@@ -546,7 +546,10 @@ def angle_restraints(omega_file, theta_file, residues, seq_sep=1):
                                   " {:>3} and name cb) (resid {:>3}" +
                                   " and name ca) 1.0 {:>7} {:>7} 2")
                                   .format(i, i, j, j, angle_mean, angle_error))
-        # n += 1
+        n += 1
+        # Only read in max 1500 dihedral angles, hard block in CNS
+        if n > 1500:
+            break
     # if res_sec:
     #     log_to_write = "write helix tbl restrains"
     #     dihedral_to_write = []
