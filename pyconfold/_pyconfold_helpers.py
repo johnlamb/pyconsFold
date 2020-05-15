@@ -536,9 +536,9 @@ def angle_restraints(omega_file, theta_file, residues, seq_sep=1):
     # Sort again, all angles mixed
     for key, value in sorted(mixed_contacts, key=lambda i: i[1][1], reverse=True):
         i, j = key.split()
-        # If one of the residues is Glycine, move along
-        if 'G' in (residues[int(i)] + residues[int(j)]):
-            continue
+        # # If one of the residues is Glycine, move along
+        # if 'G' in (residues[int(i)] + residues[int(j)]):
+        #     continue
         angle_mean, prob, angle_error = value
 
         dihedral_to_write.append(("assign (resid {:>3} and name ca) " +
