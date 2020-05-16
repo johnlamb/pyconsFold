@@ -526,12 +526,15 @@ def angle_restraints(omega_file, use_omega, theta_file, use_theta, residues, seq
     dihedral_file = "dihedral.tbl"
     # print(theta_file)
     angle_contacts = {} 
+    print(use_omega, use_theta)
     if use_omega:
         omega_contacts = angle2restraints(omega_file, 'omega', seq_sep)
         angle_contacts.update(omega_contacts)
+        print(len(angle_contacts))
     if use_theta:
         theta_contacts = angle2restraints(theta_file, 'theta', seq_sep)
         angle_contacts.update(theta_contacts)
+        print(len(angle_contacts))
     dihedral_to_write = []
     n = 0
     # mixed_contacts = sorted(omega_contacts.items(), key=lambda i: i[1][1], reverse=True)  # [:500]
@@ -539,7 +542,8 @@ def angle_restraints(omega_file, use_omega, theta_file, use_theta, residues, seq
     # extend(sorted(theta_contacts.items(), key=lambda i: i[1][1], reverse=True)[:500])
 
     # Sort again, all angles mixed
-    for key, value in sorted(angle_contacts, key=lambda i: i[1][1], reverse=True):
+    print(len(angle_contacts))
+    for key, value in sorted(angle_contacts.items(), key=lambda i: i[1][1], reverse=True):
         i, j, name = key.split()
         # # If one of the residues is Glycine, move along
         # if 'G' in (residues[int(i)] + residues[int(j)]):
