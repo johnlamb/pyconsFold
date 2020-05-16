@@ -153,7 +153,7 @@ def pyconfold(debug=False):
             sec_restraints(stage, ss_file, res_dihe, res_hbnd, res_dist,
                            res_strnd_OO, residues, ATOMTYPE, SHIFT, debug)
         ###############################################################
-        angle_restraints(omega_file, theta_file, residues)
+        angle_restraints(omega_file, args.use_omega, theta_file, args.use_theta, residues)
         ###############################################################
         # build_models(stage, fasta_file, ss_file, args.contwt, args.sswt,
         #              args.mcount, mode, rep1, args.rep2, mini, f_id, atomselect,

@@ -139,7 +139,7 @@ def rr2contacts(rr_file, seq_sep):
     return contacts
 
 
-def angle2restraints(angle_file, seq_sep):
+def angle2restraints(angle_file, name, seq_sep):
     contacts = {}
     with open(angle_file) as angle_handle:
         for line in angle_handle:
@@ -154,7 +154,7 @@ def angle2restraints(angle_file, seq_sep):
                     # Compatability for both with and without distance errors
                     cont = [c[3], c[4], c[5]]
                     contacts[" ".join([str(int(c[0])),
-                                       str(int(c[1]))])] = cont
+                                       str(int(c[1])), name])] = cont
     return contacts
 
 
@@ -522,34 +522,47 @@ def contact_restraints(stage, selectrr, rrtype, dir_out, dist, rr_file=None):
         rr2tbl(rr_file, "contact.tbl", rrtype, dir_out, dist)
 
 
-def angle_restraints(omega_file, theta_file, residues, seq_sep=1):
+def angle_restraints(omega_file, use_omega, theta_file, use_theta, residues, seq_sep=1):
     dihedral_file = "dihedral.tbl"
     # print(theta_file)
-    omega_contacts = angle2restraints(omega_file, seq_sep)
-    theta_contacts = angle2restraints(theta_file, seq_sep)
+    angle_contacts = {} 
+    if use_omega:
+        omega_contacts = angle2restraints(omega_file, 'omega', seq_sep)
+        angle_contacts.update(omega_contacts)
+    if use_theta:
+        theta_contacts = angle2restraints(theta_file, 'theta', seq_sep)
+        angle_contacts.update(theta_contacts)
     dihedral_to_write = []
     n = 0
-    mixed_contacts = sorted(omega_contacts.items(), key=lambda i: i[1][1], reverse=True)  # [:500]
-    mixed_contacts.extend(sorted(theta_contacts.items(), key=lambda i: i[1][1], reverse=True))  # [:500])
+    # mixed_contacts = sorted(omega_contacts.items(), key=lambda i: i[1][1], reverse=True)  # [:500]
+    # mixed_contacts.extend(sorted(theta_contacts.items(), key=lambda i: i[1][1], reverse=True))  # [:500])
     # extend(sorted(theta_contacts.items(), key=lambda i: i[1][1], reverse=True)[:500])
 
     # Sort again, all angles mixed
-    for key, value in sorted(mixed_contacts, key=lambda i: i[1][1], reverse=True):
-        i, j = key.split()
+    for key, value in sorted(angle_contacts, key=lambda i: i[1][1], reverse=True):
+        i, j, name = key.split()
         # # If one of the residues is Glycine, move along
         # if 'G' in (residues[int(i)] + residues[int(j)]):
         #     continue
         angle_mean, prob, angle_error = value
 
-        dihedral_to_write.append(("assign (resid {:>3} and name ca) " +
-                                  "(resid {:>3} and name  cb) (resid" +
-                                  " {:>3} and name cb) (resid {:>3}" +
-                                  " and name ca) 1.0 {:>7} {:>7} 2")
-                                  .format(i, i, j, j, angle_mean, angle_error))
+        if name == "omega":
+            dihedral_to_write.append(("assign (resid {:>3} and name ca) " +
+                                      "(resid {:>3} and name  cb) (resid" +
+                                      " {:>3} and name cb) (resid {:>3}" +
+                                      " and name ca) 1.0 {:>7} {:>7} 2")
+                                      .format(i, i, j, j, angle_mean, angle_error))
+        elif name == "theta":
+            dihedral_to_write.append(("assign (resid {:>3} and name n) " +
+                                      "(resid {:>3} and name  ca) (resid" +
+                                      " {:>3} and name cb) (resid {:>3}" +
+                                      " and name cb) 1.0 {:>7} {:>7} 2")
+                                      .format(i, i, i, j, angle_mean, angle_error))
         n += 1
         # Only read in max 1500 dihedral angles, hard block in CNS
         if n > 1500:
             break
+
     # if res_sec:
     #     log_to_write = "write helix tbl restrains"
     #     dihedral_to_write = []
