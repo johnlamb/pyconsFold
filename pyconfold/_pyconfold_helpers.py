@@ -522,7 +522,7 @@ def contact_restraints(stage, selectrr, rrtype, dir_out, dist, rr_file=None):
         rr2tbl(rr_file, "contact.tbl", rrtype, dir_out, dist)
 
 
-def angle_restraints(omega_file, use_omega, theta_file, use_theta, residues, seq_sep=1):
+def angle_restraints(omega_file, use_omega, theta_file, use_theta, residues, seq_sep=0):
     dihedral_file = "dihedral.tbl"
     # print(theta_file)
     angle_contacts = {} 
