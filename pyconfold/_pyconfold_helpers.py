@@ -542,7 +542,7 @@ def angle_restraints(omega_file, use_omega, theta_file, use_theta, residues, seq
     # extend(sorted(theta_contacts.items(), key=lambda i: i[1][1], reverse=True)[:500])
 
     # Sort again, all angles mixed
-    print(len(angle_contacts))
+    # print(len(angle_contacts))
     for key, value in sorted(angle_contacts.items(), key=lambda i: i[1][1], reverse=True):
         i, j, name = key.split()
         # # If one of the residues is Glycine, move along
@@ -1346,80 +1346,81 @@ def assess_dgsa(stage, fasta_file, ss_file, dir_out, mcount, f_id, num_top_model
         energy_noe[pdb] = get_cns_energy(pdb, "noe")
     # top_pdb = sorted(energy_noe.items(), key=lambda i: [i[1], i[0]])[0][0]
 
-    if debug:
-        print("\n\n")
-        print("           ENERGY            CLASH     SS              NOE " +
-              "SATISFIED(±0.2A)            SUM OF DEVIATIONS >= 0.2     PDB")
-        print("--------------------------  -------  -------  ----------------" +
-              "-----------------------  -------------------------  --------")
-        print("TOTAL  VDW    BOND   NOE    2.5 3.5  H   E    CONTACTS  SS-NOE" +
-              "    HBONDS    DIHEDRAL   CONTACTS SS-NOE   HBONDS")
+    # if debug:
+    #     print("\n\n")
+    #     print("           ENERGY            CLASH     SS              NOE " +
+    #           "SATISFIED(±0.2A)            SUM OF DEVIATIONS >= 0.2     PDB")
+    #     print("--------------------------  -------  -------  ----------------" +
+    #           "-----------------------  -------------------------  --------")
+    #     print("TOTAL  VDW    BOND   NOE    2.5 3.5  H   E    CONTACTS  SS-NOE" +
+    #           "    HBONDS    DIHEDRAL   CONTACTS SS-NOE   HBONDS")
 
-    for pdb, noe_energy in sorted(energy_noe.items(),
-                                  key=lambda i: i[1]):
-        e1 = get_cns_energy(pdb, "overall")
-        e2 = get_cns_energy(pdb, "vdw")
-        e3 = get_cns_energy(pdb, "bon")
-        e4 = noe_energy
-        c1 = clash_count(pdb, 2.5)
-        c2 = clash_count(pdb, 3.5)
-        h = count_ss_match(pdb, fasta_file, ss_file, "H", program_dssp)
-        e = count_ss_match(pdb, fasta_file, ss_file, "E", program_dssp)
-        if os.path.isfile("contact.tbl"):
-            n1 = count_satisfied_tbl_rows(pdb, "contact.tbl", "noe", program_dssp)
-        else:
-            n1 = "-"
-        if os.path.isfile("ssnoe.tbl"):
-            n2 = count_satisfied_tbl_rows(pdb, "ssnoe.tbl", "noe", program_dssp)
-        else:
-            n2 = "-"
-        if os.path.isfile("hbond.tbl"):
-            n3 = count_satisfied_tbl_rows(pdb, "hbond.tbl", "noe", program_dssp)
-        else:
-            n3 = "-"
-        if os.path.isfile("dihedral.tbl"):
-            n4 = count_satisfied_tbl_rows(pdb, "dihedral.tbl", "dihedral",
-                                      program_dssp)
-        else:
-            n4 = "-"
-        if os.path.isfile("contact.tbl"):
-            s1 = sum_noe_dev(pdb, "contact.tbl")
-        else:
-            s1 = "-"
-        if os.path.isfile("ssnoe.tbl"):
-            s2 = sum_noe_dev(pdb, "ssnoe.tbl")
-        else:
-            s2 = "-"
-        if os.path.isfile("hbond.tbl"):
-            s3 = sum_noe_dev(pdb, "hbond.tbl")
-        else:
-            s3 = "-"
-        if debug:
-            print("{:<6} {:<6} {:<6} {:<6} {:<3} {:<3}  {:<3} {:<3}  "
-                  .format(e1, e2, e3, e4, c1, c2, h, e), end='')
-            print("{:<9} {:<9} {:<9} {:<9}  {:<8} {:<8} {:<8} {:<25}"
-                  .format(n1, n2, n3, n4, s1, s2, s3, os.path.basename(pdb)))
+    # for pdb, noe_energy in sorted(energy_noe.items(),
+    #                               key=lambda i: i[1]):
+    #     e1 = get_cns_energy(pdb, "overall")
+    #     e2 = get_cns_energy(pdb, "vdw")
+    #     e3 = get_cns_energy(pdb, "bon")
+    #     e4 = noe_energy
+    #     c1 = clash_count(pdb, 2.5)
+    #     c2 = clash_count(pdb, 3.5)
+    #     h = count_ss_match(pdb, fasta_file, ss_file, "H", program_dssp)
+    #     e = count_ss_match(pdb, fasta_file, ss_file, "E", program_dssp)
+    #     if os.path.isfile("contact.tbl"):
+    #         n1 = count_satisfied_tbl_rows(pdb, "contact.tbl", "noe", program_dssp)
+    #     else:
+    #         n1 = "-"
+    #     if os.path.isfile("ssnoe.tbl"):
+    #         n2 = count_satisfied_tbl_rows(pdb, "ssnoe.tbl", "noe", program_dssp)
+    #     else:
+    #         n2 = "-"
+    #     if os.path.isfile("hbond.tbl"):
+    #         n3 = count_satisfied_tbl_rows(pdb, "hbond.tbl", "noe", program_dssp)
+    #     else:
+    #         n3 = "-"
+    #     if os.path.isfile("dihedral.tbl"):
+    #         n4 = count_satisfied_tbl_rows(pdb, "dihedral.tbl", "dihedral",
+    #                                   program_dssp)
+    #     else:
+    #         n4 = "-"
+    #     if os.path.isfile("contact.tbl"):
+    #         s1 = sum_noe_dev(pdb, "contact.tbl")
+    #     else:
+    #         s1 = "-"
+    #     if os.path.isfile("ssnoe.tbl"):
+    #         s2 = sum_noe_dev(pdb, "ssnoe.tbl")
+    #     else:
+    #         s2 = "-"
+    #     if os.path.isfile("hbond.tbl"):
+    #         s3 = sum_noe_dev(pdb, "hbond.tbl")
+    #     else:
+    #         s3 = "-"
+    #     if debug:
+    #         print("{:<6} {:<6} {:<6} {:<6} {:<3} {:<3}  {:<3} {:<3}  "
+    #               .format(e1, e2, e3, e4, c1, c2, h, e), end='')
+    #         print("{:<9} {:<9} {:<9} {:<9}  {:<8} {:<8} {:<8} {:<25}"
+    #               .format(n1, n2, n3, n4, s1, s2, s3, os.path.basename(pdb)))
 
-    for pdb in sorted(energy_noe.keys(), reverse=True):
-        ss = pdb2ss(pdb, program_dssp)
-        ss = re.sub("C", "-", ss)
-        if debug:
-            print("{} [{}]".format(ss, os.path.basename(pdb)))
+    # for pdb in sorted(energy_noe.keys(), reverse=True):
+    #     ss = pdb2ss(pdb, program_dssp)
+    #     ss = re.sub("C", "-", ss)
+    #     if debug:
+    #         print("{} [{}]".format(ss, os.path.basename(pdb)))
 
-    for tbl in sorted(tbl_list.keys()):
-        if "dihedral" in tbl:
-            continue
-        for pdb in sorted(energy_noe.keys(), reverse=True):
-            if debug:
-                print(noe_tbl_violation_coverage(pdb, tbl) + " [ violation of " + os.path.basename(tbl) + " in " + os.path.basename(pdb) + " ]")
-        if debug:
-            print()
+    # for tbl in sorted(tbl_list.keys()):
+    #     if "dihedral" in tbl:
+    #         continue
+    #     for pdb in sorted(energy_noe.keys(), reverse=True):
+    #         if debug:
+    #             print(noe_tbl_violation_coverage(pdb, tbl) + " [ violation of " + os.path.basename(tbl) + " in " + os.path.basename(pdb) + " ]")
+    #     if debug:
+    #         print()
     i = 1
     for pdb, noe_energy in sorted(energy_noe.items(),
                                   key=lambda i: i[1]):
         print("model{}.pdb <= {}".format(i, pdb))
         shutil.copy(pdb, os.path.join(dir_out, "{}_model{}.pdb".format(f_id, i)))
         shutil.move(pdb, "{}_model{}.pdb".format(f_id, i))
+        print2file(os.path.join(dir_out, "{}_model{}.noe".format(f_id, i)), "{}".format(noe_energy))
         i += 1
         # if i > mcount:
         if i > num_top_models:   # Only move the top models
