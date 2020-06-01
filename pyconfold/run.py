@@ -17,7 +17,7 @@ from ._arguments import get_args
 ################## Default dssp ########################################
 program_dssp = os.path.join(os.path.dirname(os.path.realpath(__file__)), "dssp/dssp-2.0.4-linux-amd64")
 ########## The following three for Keb #################################
-# program_dssp = "/pfs/nobackup/home/m/mircomic/dssp-2.0.4-linux-amd64"
+program_dssp = "/pfs/nobackup/home/m/mircomic/dssp-2.0.4-linux-amd64"
 cns_suite = "/pfs/nobackup/home/m/mircomic/CNS/cns_solve_1.3"
 ########################################################################
 # pair=None  not implemented yet
@@ -28,7 +28,7 @@ cns_suite = "/pfs/nobackup/home/m/mircomic/CNS/cns_solve_1.3"
 def pyconfold(debug=False):
     ########## CNS path, defaults, comment for Keb #################
     # cns_suite = "<enter CNS-path here>"
-    cns_suite = os.environ["CNS_SOLVE"]
+    # cns_suite = os.environ["CNS_SOLVE"]
     cns_executable = cns_suite + "/intel-x86_64bit-linux/bin/cns_solve"
 
     args = get_args()
