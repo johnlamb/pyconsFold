@@ -247,9 +247,9 @@ def process_arguments(fasta, ss, rr, dir_out, rrtype, omega, theta, mcount, sele
     shutil.copy(rr, dir_out + "/input/" + rr_file)
     if ss:
         shutil.copy(ss, dir_out + "/input/" + ss_file)
-    if omega_file:
+    if omega:
         shutil.copy(omega, dir_out + "/input/" + omega_file)
-    if theta_file:
+    if theta:
         shutil.copy(theta, dir_out + "/input/" + theta_file)
 
     base_dir = os.path.dirname(os.path.realpath(__file__))
