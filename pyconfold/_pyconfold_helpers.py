@@ -175,11 +175,11 @@ def clean_output_dir(dir_out):
 
 # pair not implemented
 def process_arguments(fasta, ss, rr, dir_out, rrtype, omega, theta, mcount, selectrr,
-                      lbd, contwt, sswt, rep2, pthres, dist, debug, rr_pthres):
+                      lbd, contwt, sswt, rep2, pthres, debug, rr_pthres):
     if not os.path.isfile(fasta):
         print("ERROR! Fasta file {} does not exist!".format(fasta))
         sys.exit()
-    if not os.path.isfile(ss):
+    if not ss and not os.path.isfile(ss):
         print("ERROR! Secondary structure file {} " +
               "does not exist!".format(fasta))
         sys.exit()
@@ -234,7 +234,8 @@ def process_arguments(fasta, ss, rr, dir_out, rrtype, omega, theta, mcount, sele
 
     fasta_file = f_id + ".fasta"
     rr_file = f_id + ".rr"
-    ss_file = f_id + ".ss"
+    if ss:
+        ss_file = f_id + ".ss"
     omega_file = f_id + ".omega"
     theta_file = f_id + ".theta"
     # pair_file = None
@@ -244,9 +245,12 @@ def process_arguments(fasta, ss, rr, dir_out, rrtype, omega, theta, mcount, sele
 
     shutil.copy(fasta, dir_out + "/input/" + fasta_file)
     shutil.copy(rr, dir_out + "/input/" + rr_file)
-    shutil.copy(ss, dir_out + "/input/" + ss_file)
-    shutil.copy(omega, dir_out + "/input/" + omega_file)
-    shutil.copy(theta, dir_out + "/input/" + theta_file)
+    if ss:
+        shutil.copy(ss, dir_out + "/input/" + ss_file)
+    if omega_file:
+        shutil.copy(omega, dir_out + "/input/" + omega_file)
+    if theta_file:
+        shutil.copy(theta, dir_out + "/input/" + theta_file)
 
     base_dir = os.path.dirname(os.path.realpath(__file__))
     os.chdir(dir_out + "/input")
@@ -263,18 +267,19 @@ def process_arguments(fasta, ss, rr, dir_out, rrtype, omega, theta, mcount, sele
         clean_output_dir(dir_out)
         sys.exit()
 
-    ss_seq = seq_fasta(ss_file)
-    if len(seq) != len(ss_seq):
-        print("ERROR! Fasta and ss sequence length do not match!" +
-              "\nFasta\t: {} \nRR\t:{}".format(seq, ss_seq))
-        clean_output_dir(dir_out)
-        sys.exit()
-
-    for s in ss_seq:
-        if s not in "HCE":
-            print("ERROR undefined secondary structure unit {}".format(s))
+    if ss:
+        ss_seq = seq_fasta(ss_file)
+        if len(seq) != len(ss_seq):
+            print("ERROR! Fasta and ss sequence length do not match!" +
+                  "\nFasta\t: {} \nRR\t:{}".format(seq, ss_seq))
             clean_output_dir(dir_out)
             sys.exit()
+
+        for s in ss_seq:
+            if s not in "HCE":
+                print("ERROR undefined secondary structure unit {}".format(s))
+                clean_output_dir(dir_out)
+                sys.exit()
 
     if os.path.isfile("sorted.rr"):
         os.remove("sorted.rr")
@@ -924,7 +929,8 @@ def build_models(stage, fasta_file, ss_file, contwt, sswt, mcount, mode,
             tbl_list[tbl] = count_lines(tbl)
     if debug:
         print(seq_fasta(fasta_file))
-        print(seq_fasta(ss_file))
+        if ss_file:
+            print(seq_fasta(ss_file))
     flag_dihe = False
     for tbl in sorted(tbl_list.keys()):
         if tbl == "dihedral.tbl":

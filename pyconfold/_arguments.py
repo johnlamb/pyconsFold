@@ -3,18 +3,17 @@ import argparse
 def get_args():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("fasta", type=str, help="input sequence file in FASTA format")
-    parser.add_argument("ss", type=str, help="Secondary structure file in ss2/3 format")
     parser.add_argument("rr", type=str, help="Contact file in CASP format, with or without error as last column")
     parser.add_argument("out_dir", type=str, help="Output directory to write results")
     
     parser.add_argument("-d", "--dist", type=bool, default=False, help="Use predicted distance and error, must use a compatible RR-file")
-
+    parser.add_argument("-ss", "--sec_struct", type=str, help="Secondary structure file in ss2/3 format")
     parser.add_argument("-om", "--omega", type=str, default="", help="Omega angles file in CASP format")
     parser.add_argument("-th", "--theta", type=str, default="", help="Theta angles file in CASP format")
     parser.add_argument("-uom", "--use_omega", type=bool, default=False, help="Use Omega angles")
     parser.add_argument("-uth", "--use_theta", type=bool, default=False, help="Use Theta angles")
     parser.add_argument("-noss", "--noss", type=bool, default=False, help="Run without secondary structure")
-    parser.add_argument("-ss", "--sstep", type=bool, default=False, help="Save step, on or off")
+    parser.add_argument("-saves", "--sstep", type=bool, default=False, help="Save step, on or off")
     parser.add_argument("-tm", "--top_models", type=int, default=5, help="Number of top models selected(from the potentials)")
     parser.add_argument("-rrt", "--rr_type", type=str, default="cb", choices=["ca","cb"], help="Contact type")
     parser.add_argument("-mcount", "--model_count", type=int, default=20, help="Number of potential models generated")
