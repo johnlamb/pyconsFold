@@ -54,16 +54,16 @@ def pyconfold(debug=False):
     if not os.path.isfile(args.fasta):
         print("ERROR! Fasta file {} does not exist!".format(args.fasta))
         sys.exit()
-    if not os.path.isfile(args.ss):
+    if not os.path.isfile(args.sec_struct):
         print("ERROR! Secondary structure file {} " +
-              "does not exist!".format(args.ss))
+              "does not exist!".format(args.sec_struct))
         sys.exit()
     if not os.path.isfile(args.rr):
         print("ERROR! Contact file {} does not exist!".format(args.rr))
         sys.exit()
 
     fasta_file, rr_file, ss_file, omega_file, theta_file, residues, f_id, selectrr, mini =\
-            process_arguments(args.fasta, args.ss, args.rr, args.out_dir, args.rr_type, args.omega, args.theta, args.model_count, args.select_rr,
+            process_arguments(args.fasta, args.sec_struct, args.rr, args.out_dir, args.rr_type, args.omega, args.theta, args.model_count, args.select_rr,
                               args.lbd, args.contwt, args.sswt, args.rep2, args.pthres, debug, args.rr_pthres)
     # base_dir = os.path.dirname(os.path.realpath(__file__))
     # base_dir = os.getcwd()
@@ -204,16 +204,16 @@ def pyconfold_dist(debug=False):
     if not os.path.isfile(args.fasta):
         print("ERROR! Fasta file {} does not exist!".format(args.fasta))
         sys.exit()
-    if args.ss and not os.path.isfile(args.ss):
+    if args.sec_struct and not os.path.isfile(args.sec_struct):
         print("ERROR! Secondary structure file {} " +
-              "does not exist!".format(args.ss))
+              "does not exist!".format(args.sec_struct))
         sys.exit()
     if not os.path.isfile(args.rr):
         print("ERROR! Contact file {} does not exist!".format(args.rr))
         sys.exit()
 
     fasta_file, rr_file, ss_file, omega_file, theta_file, residues, f_id, selectrr, mini =\
-            process_arguments(args.fasta, args.ss, args.rr, args.out_dir, args.rr_type, args.omega, args.theta, args.model_count, args.select_rr,
+            process_arguments(args.fasta, args.sec_struct, args.rr, args.out_dir, args.rr_type, args.omega, args.theta, args.model_count, args.select_rr,
                               args.lbd, args.contwt, args.sswt, args.rep2, args.pthres, debug, args.rr_pthres)
     # base_dir = os.path.dirname(os.path.realpath(__file__))
     # base_dir = os.getcwd()
