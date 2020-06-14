@@ -179,10 +179,11 @@ def process_arguments(fasta, ss, rr, dir_out, rrtype, omega, theta, mcount, sele
     if not os.path.isfile(fasta):
         print("ERROR! Fasta file {} does not exist!".format(fasta))
         sys.exit()
-    if not ss and not os.path.isfile(ss):
-        print("ERROR! Secondary structure file {} " +
-              "does not exist!".format(fasta))
-        sys.exit()
+    if ss:
+        if not os.path.isfile(ss):
+            print("ERROR! Secondary structure file {} " +
+                  "does not exist!".format(fasta))
+            sys.exit()
     if not os.path.isfile(rr):
         print("ERROR! Contact file {} does not exist!".format(fasta))
         sys.exit()
@@ -236,6 +237,8 @@ def process_arguments(fasta, ss, rr, dir_out, rrtype, omega, theta, mcount, sele
     rr_file = f_id + ".rr"
     if ss:
         ss_file = f_id + ".ss"
+    else:
+        ss_file = ''
     omega_file = f_id + ".omega"
     theta_file = f_id + ".theta"
     # pair_file = None
