@@ -213,7 +213,7 @@ def pyconfold_dist(debug=False):
         sys.exit()
 
     fasta_file, rr_file, ss_file, omega_file, theta_file, residues, f_id, selectrr, mini =\
-            process_arguments(args.fasta, args.sec_struct, args.rr, args.out_dir, args.rr_type, args.omega, args.theta, args.model_count, args.select_rr,
+            process_arguments(args.fasta, args.sec_struct, args.rr, dir_out, args.rr_type, args.omega, args.theta, args.model_count, args.select_rr,
                               args.lbd, args.contwt, args.sswt, args.rep2, args.pthres, debug, args.rr_pthres)
     # base_dir = os.path.dirname(os.path.realpath(__file__))
     # base_dir = os.getcwd()
