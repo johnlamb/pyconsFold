@@ -17,20 +17,14 @@ from ._arguments import get_args
 ################## Default dssp ########################################
 program_dssp = os.path.join(os.path.dirname(os.path.realpath(__file__)), "dssp/dssp-2.0.4-linux-amd64")
 ########## The following three for Keb #################################
-# program_dssp = "/pfs/nobackup/home/m/mircomic/dssp-2.0.4-linux-amd64"
-cns_suite = "/pfs/nobackup/home/m/mircomic/CNS/cns_solve_1.3"
 cns_suite = os.environ["CNS_SOLVE"]
 cns_executable = cns_suite + "/intel-x86_64bit-linux/bin/cns_solve"
 ########################################################################
 # pair=None  not implemented yet
 
-
 # def pyconfold(fasta, ss, rr, dir_out, save_steps=False, num_top_models=5, rrtype="cb", mcount=20, selectrr="all",
 #               lbd=0.4, contwt=10, sswt=5, rep2=0.85, pthres=7.0, dist=False, dist_error=False, debug=False):
 def pyconfold(debug=False):
-    ########## CNS path, defaults, comment for Keb #################
-    # cns_suite = "<enter CNS-path here>"
-
     args = get_args()
 
     rep1 = 1.0
@@ -64,7 +58,7 @@ def pyconfold(debug=False):
 
     fasta_file, rr_file, ss_file, omega_file, theta_file, residues, f_id, selectrr, mini =\
             process_arguments(args.fasta, args.sec_struct, args.rr, args.out_dir, args.rr_type, args.omega, args.theta, args.model_count, args.select_rr,
-                              args.lbd, args.contwt, args.sswt, args.rep2, args.pthres, debug, args.rr_pthres)
+                              args.lbd, args.contwt, args.sswt, args.rep2, args.pthres, debug, args.rr_pthres, 5)
     # base_dir = os.path.dirname(os.path.realpath(__file__))
     # base_dir = os.getcwd()
     # print(base_dir)
@@ -178,14 +172,10 @@ def pyconfold(debug=False):
 
 
 def pyconfold_dist(debug=False):
-    ########## CNS path, defaults, comment for Keb #################
-    # cns_suite = "<enter CNS-path here>"
-
     args = get_args()
 
     rep1 = 1.0
     mini = 0
-    # pthres_hbond = args.pthres + 3.0
     pthres_hbond = args.pthres + 3.0
     atomselect = 2
     mode = "trial"
@@ -195,7 +185,7 @@ def pyconfold_dist(debug=False):
 
     base_dir = os.getcwd()
     # dir_out = os.path.join(base_dir, args.dir_out)
-    dir_out = os.path.join(base_dir, args.out_dir) + "_dist"
+    dir_out = os.path.join(base_dir, args.out_dir)
 
     check_programs(program_dssp, cns_suite, cns_executable)
     # fasta_file, rr_file, ss_file, pair_file, residues, f_id, selectrr, mini =\
@@ -214,7 +204,7 @@ def pyconfold_dist(debug=False):
 
     fasta_file, rr_file, ss_file, omega_file, theta_file, residues, f_id, selectrr, mini =\
             process_arguments(args.fasta, args.sec_struct, args.rr, args.out_dir, args.rr_type, args.omega, args.theta, args.model_count, args.select_rr,
-                              args.lbd, args.contwt, args.sswt, args.rep2, args.pthres, debug, args.rr_pthres)
+                              args.lbd, args.contwt, args.sswt, args.rep2, args.pthres, debug, args.rr_pthres, 0)
     # base_dir = os.path.dirname(os.path.realpath(__file__))
     # base_dir = os.getcwd()
     # print(base_dir)
