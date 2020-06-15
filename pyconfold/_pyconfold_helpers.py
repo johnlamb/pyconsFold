@@ -298,7 +298,7 @@ def process_arguments(fasta, ss, rr, dir_out, rrtype, omega, theta, mcount, sele
             continue
         x, y = (int(x) for x in line.split()[:2])
 
-        if (y-z)>rr_sep:
+        if (y-x)>rr_sep:
             rr_lines.append(line.strip().split())
     rr_lines.sort(key=lambda x: float(x[4]), reverse=True)
     rr_scores = '\n'.join([' '.join(x) for x in rr_lines if float(x[4]) > rr_pthres])
