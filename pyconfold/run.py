@@ -398,7 +398,6 @@ def pyconfold_dock(debug=False):
 
     if not os.path.isfile("extended.pdb"):
             build_extended(fasta_file, cns_suite, cns_executable, fasta2_file)
-    sys.exit()
     defined_atoms = xyz_pdb("extended.pdb", "all")
 
     # Hydrogen or Nitrogen must be present for all atoms, in order to apply
