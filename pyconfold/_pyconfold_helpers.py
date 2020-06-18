@@ -175,10 +175,14 @@ def clean_output_dir(dir_out):
 
 # pair not implemented
 def process_arguments(fasta, ss, rr, dir_out, rrtype, omega, theta, mcount, selectrr,
-                      lbd, contwt, sswt, rep2, pthres, debug, rr_pthres, rr_sep):
+                      lbd, contwt, sswt, rep2, pthres, debug, rr_pthres, rr_sep, fa2=""):
     if not os.path.isfile(fasta):
         print("ERROR! Fasta file {} does not exist!".format(fasta))
         sys.exit()
+    if fa2:
+        if not os.path.isfile(fa2):
+            print("ERROR! Fasta file #2 {} does not exist!".format(fa2))
+            sys.exit()
     if ss:
         if not os.path.isfile(ss):
             print("ERROR! Secondary structure file {} " +
@@ -234,6 +238,8 @@ def process_arguments(fasta, ss, rr, dir_out, rrtype, omega, theta, mcount, sele
     # os.mkdir(dir_out + "/stage1")
 
     fasta_file = f_id + ".fasta"
+    f2_id = os.path.splitext(os.path.basename(fa2))[0]
+    fasta2_file = f2_id + ".fasta"
     rr_file = f_id + ".rr"
     if ss:
         ss_file = f_id + ".ss"
@@ -247,6 +253,8 @@ def process_arguments(fasta, ss, rr, dir_out, rrtype, omega, theta, mcount, sele
     #     shutil.copy(pair, dir_out + "/input/" + pair_file)
 
     shutil.copy(fasta, dir_out + "/input/" + fasta_file)
+    if fa2:
+        shutil.copy(fa2, dir_out + "/input/" + fasta2_file)
     shutil.copy(rr, dir_out + "/input/" + rr_file)
     if ss:
         shutil.copy(ss, dir_out + "/input/" + ss_file)
@@ -259,11 +267,21 @@ def process_arguments(fasta, ss, rr, dir_out, rrtype, omega, theta, mcount, sele
     os.chdir(dir_out + "/input")
 
     flatten_fasta(fasta_file)
+
     residues = fasta2residues(fasta_file)
     seq = seq_fasta(fasta_file)
+    plen = len(seq)
     chk_errors_seq(seq, dir_out)
 
     rr_seq = seq_rr(rr_file, dir_out)
+    if fa2:
+        flatten_fasta(fasta2_file)
+        fasta2_res = fasta2residues(fasta2_file) 
+        inter_dict = {}
+        for key, value in fasta2_res.items():
+            inter_dict[key+plen] = value
+        residues.update(inter_dict)
+        seq = seq + seq_fasta(fasta2_file)
     if not seq == rr_seq:
         print("ERROR! Fasta and rr sequence do not match!" +
               "\nFasta\t: {} \nRR\t: {}".format(seq, rr_seq))
@@ -351,7 +369,7 @@ def process_arguments(fasta, ss, rr, dir_out, rrtype, omega, theta, mcount, sele
         print("sequence     {}".format(seq))
         print("ss_seq       {}".format(ss_seq))
     # pair_file
-    return fasta_file, rr_file, ss_file, omega_file, theta_file, residues,\
+    return fasta_file, fasta2_file, rr_file, ss_file, omega_file, theta_file, residues,\
         f_id, selectrr, mini
 
 
@@ -370,8 +388,15 @@ def write_cns_seq(fasta_file, file_cns_seq, chunk=64):
     print2file(file_cns_seq, width_limited_seq)
 
 
-def build_extended(fasta_file, cns_suite, cns_executable):
+def build_extended(fasta_file, cns_suite, cns_executable, fasta_file2=""):
     write_cns_seq(fasta_file, "input.seq")
+    if fasta_file2:
+        input_len = len(seq_fasta(fasta_file))
+        write_cns_seq(fasta_file2, "input2.seq")
+        write_cns_gseq("input2.seq", input_len + 1)
+    else:
+        write_cns_gseq("", 0)
+
     # Not needing to generate gseq.inp file, already done as template
     # Not needing to generate extn.inp file, already done as template
     job_file = "#!/bin/bash\n"
@@ -879,6 +904,16 @@ def write_cns_customized_modules(sswt):
             scale_dump = re.sub("\$sswt", str(sswt), scale_dump)
         os.remove(mod)
         print2file(mod, scale_dump)
+
+
+def write_cns_gseq(input_file, plen):
+    mod = "gseq.inp"
+    with open(mod) as gseq_handle:
+        gseq_dump = gseq_handle.read()
+        gseq_dump = re.sub("\$input_seq2", str(input_file), gseq_dump)
+        gseq_dump = re.sub("\$res_renum", str(plen), gseq_dump)
+    os.remove(mod)
+    print2file(mod, gseq_dump)
 
 
 def write_cns_dgsa_file(contwt, sswt, mcount, mode,

@@ -6,6 +6,7 @@ def get_args():
     parser.add_argument("rr", type=str, help="Contact file in CASP format, with or without error as last column")
     parser.add_argument("out_dir", type=str, help="Output directory to write results")
     
+    parser.add_argument("-fa2", "--fa2", type=str, help="input sequence file in FASTA format for the second sequence")
     parser.add_argument("-d", "--dist", type=bool, default=False, help="Use predicted distance and error, must use a compatible RR-file")
     parser.add_argument("-ss", "--sec_struct", type=str, help="Secondary structure file in ss2/3 format")
     parser.add_argument("-om", "--omega", type=str, default="", help="Omega angles file in CASP format")

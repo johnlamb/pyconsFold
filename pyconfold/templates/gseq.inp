@@ -45,15 +45,15 @@
 {* protein sequence file 1 *}
 {===>} prot_sequence_infile_1="input.seq";
 {* segid *}
-{===>} prot_segid_1="";
+{===>} prot_segid_1="A";
 {* start residue numbering at *}
 {===>} renumber_1=1;
 {* protein sequence file 2 *}
-{===>} prot_sequence_infile_2="";
+{===>} prot_sequence_infile_2="$input_seq2";
 {* segid *}
-{===>} prot_segid_2="";
+{===>} prot_segid_2="B";
 {* start residue numbering at *}
-{===>} renumber_2=1;
+{===>} renumber_2=$res_renum;
 {* protein sequence file 3 *}
 {===>} prot_sequence_infile_3="";
 {* segid *}

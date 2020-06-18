@@ -14,4 +14,4 @@ import pyconfold
 #     dist_error = True if sys.argv[6] == "True" else False
 
 # pyconfold.pyconfold(debug=False)
-pyconfold.pyconfold(debug=False)
+pyconfold.pyconfold_dock(debug=False)
