@@ -128,7 +128,6 @@ def rr2contacts(rr_file, seq_sep):
                 if abs(c[1]-c[0]) < seq_sep:
                     continue
                 else:
-                    # contacts.append([int(x) for x in c[:2]])
                     # Compatability for both with and without distance errors
                     if len(c)>5:
                         cont = [c[3], c[4], c[5]]
@@ -174,57 +173,67 @@ def clean_output_dir(dir_out):
 
 
 # pair not implemented
-def process_arguments(fasta, ss, rr, dir_out, rrtype, omega, theta, mcount, selectrr,
-                      lbd, contwt, sswt, rep2, pthres, debug, rr_pthres, rr_sep, fa2=""):
+def process_arguments(fasta, rr, dir_out, ss, rrtype, selectrr, fasta2, omega, theta, mcount,
+                      lbd, contwt, sswt, rep2, rr_pthres, rr_sep, debug):
+    ### Check that all files exists ###
     if not os.path.isfile(fasta):
         print("ERROR! Fasta file {} does not exist!".format(fasta))
         sys.exit()
-    if fa2:
-        if not os.path.isfile(fa2):
-            print("ERROR! Fasta file #2 {} does not exist!".format(fa2))
+    if not os.path.isfile(rr):
+        print("ERROR! Contact file {} does not exist!".format(fasta))
+        sys.exit()
+    if fasta2:
+        if not os.path.isfile(fasta2):
+            print("ERROR! Fasta file #2 {} does not exist!".format(fasta2))
             sys.exit()
     if ss:
         if not os.path.isfile(ss):
             print("ERROR! Secondary structure file {} " +
                   "does not exist!".format(fasta))
             sys.exit()
-    if not os.path.isfile(rr):
-        print("ERROR! Contact file {} does not exist!".format(fasta))
-        sys.exit()
-    # if pair is not None and not os.path.isfile(pair):
-    #     print("ERROR! Pair file {} does not exist!".format(pair))
-    #     sys.exit()
 
+    ### Length and base name of fasta seq ###
     L = len(seq_fasta(fasta))
     mini = 15 * L
     f_id = os.path.splitext(os.path.basename(fasta))[0]
+    f2_id = os.path.splitext(os.path.basename(fasta2))[0]
 
+    ### How many contacts to use? ###
     selectrr = selectrr.replace("L", "")
     selectrr = 10000000 if selectrr == "all" else int(float(selectrr) * L + 0.5)
     if not (selectrr > 0 and selectrr <= 10000000):
         print("ERROR! Selectrr option does not " +
               "look right: {}".format(selectrr))
         sys.exit()
+
+    ### mcount, how many models to generate ###
     if not (mcount >= 5 and mcount <= 50):
         print("ERROR! Model count must be between 5 and 50!")
         sys.exit()
+
+    ### Lambda value ###
     if not (lbd >= 0.1 and lbd <= 10.0):
         print("ERROR! Lambda must be between 0.1 and 10.0!")
         sys.exit()
+
+    ### Contact restraint weight, higher means more weight to contact restraints ###
     if not (contwt >= 0.1 and contwt <= 10000):
         print("ERROR! Contact restraint weights must be " +
               "between 0.1 and 10000!")
         sys.exit()
+
+    ### Secondary structure weight, more means more weight to secondary structure restraints ###
     if not (sswt >= 0.1 and sswt <= 100):
         print("ERROR! SS restraint weights must be between 0.1 and 100!")
         sys.exit()
+
+    ### Rep2 ###
     if not (rep2 >= 0.6 and rep2 <= 1.5):
         print("ERROR! Rep2 must be between 0.6 and 1.5!")
         sys.exit()
-    if not (pthres >= 5.0 and pthres <= 10.0):
-        print("ERROR! Pair detection threshold must be between 5.0 and 10.0!")
-        sys.exit()
 
+
+    ### Prepare working directories, remove if exists ###
     dir_out = os.path.abspath(os.path.join(os.getcwd(), dir_out))
     if not os.path.isdir(dir_out):
         os.mkdir(dir_out)
@@ -235,27 +244,34 @@ def process_arguments(fasta, ss, rr, dir_out, rrtype, omega, theta, mcount, sele
     if os.path.isdir(dir_out + "/stage2"):
         shutil.rmtree(dir_out + "/stage2")
     os.mkdir(dir_out + "/input")
-    # os.mkdir(dir_out + "/stage1")
 
+    ## Create filenames to standardize ###
     fasta_file = f_id + ".fasta"
-    f2_id = os.path.splitext(os.path.basename(fa2))[0]
-    fasta2_file = f2_id + ".fasta"
     rr_file = f_id + ".rr"
+
+    ### Optional files ###
+    if fasta2:
+        fasta2_file = f2_id + ".fasta"
+    else:
+        fasta2_file = ''
     if ss:
         ss_file = f_id + ".ss"
     else:
         ss_file = ''
-    omega_file = f_id + ".omega"
-    theta_file = f_id + ".theta"
-    # pair_file = None
-    # if pair is not None:
-    #     pair_file = f_id + ".pair"
-    #     shutil.copy(pair, dir_out + "/input/" + pair_file)
+    if omega:
+        omega_file = f_id + ".omega"
+    else:
+        omega_file = ''
+    if theta:
+        theta_file = f_id + ".theta"
+    else:
+        theta_file = ''
 
+    ### Copy files into the input directory ###
     shutil.copy(fasta, dir_out + "/input/" + fasta_file)
-    if fa2:
-        shutil.copy(fa2, dir_out + "/input/" + fasta2_file)
     shutil.copy(rr, dir_out + "/input/" + rr_file)
+    if fasta2:
+        shutil.copy(fasta2, dir_out + "/input/" + fasta2_file)
     if ss:
         shutil.copy(ss, dir_out + "/input/" + ss_file)
     if omega:
@@ -263,31 +279,43 @@ def process_arguments(fasta, ss, rr, dir_out, rrtype, omega, theta, mcount, sele
     if theta:
         shutil.copy(theta, dir_out + "/input/" + theta_file)
 
+    ### Move into the input directory ###
     base_dir = os.path.dirname(os.path.realpath(__file__))
     os.chdir(dir_out + "/input")
 
+    ### Flatten fasta, make sure it has the sequence on one row ###
     flatten_fasta(fasta_file)
 
+    ### Check integrity of fasta file ###
     residues = fasta2residues(fasta_file)
     seq = seq_fasta(fasta_file)
     plen = len(seq)
     chk_errors_seq(seq, dir_out)
 
-    rr_seq = seq_rr(rr_file, dir_out)
-    if fa2:
+    ### If we use a second fasta (for docking), check for error and concatenate sequences ###
+    if fasta2:
         flatten_fasta(fasta2_file)
+        seq2 = seq_fasta(fasta2_file)
+        chk_errors_seq(seq2, dir_out)
+
+        ### Update both seq and residues to uuse both files
         fasta2_res = fasta2residues(fasta2_file) 
         inter_dict = {}
         for key, value in fasta2_res.items():
             inter_dict[key+plen] = value
         residues.update(inter_dict)
         seq = seq + seq_fasta(fasta2_file)
+
+    ### Check so that the sequence from the contact file is the same as the sequence from the fasta file ###
+    ### (Must be done after a potential second file has been loaded ###
+    rr_seq = seq_rr(rr_file, dir_out)
     if not seq == rr_seq:
         print("ERROR! Fasta and rr sequence do not match!" +
               "\nFasta\t: {} \nRR\t: {}".format(seq, rr_seq))
         clean_output_dir(dir_out)
         sys.exit()
 
+    ### Check SS file for integrity and length against fasta
     if ss:
         ss_seq = seq_fasta(ss_file)
         if len(seq) != len(ss_seq):
@@ -302,40 +330,32 @@ def process_arguments(fasta, ss, rr, dir_out, rrtype, omega, theta, mcount, sele
                 clean_output_dir(dir_out)
                 sys.exit()
 
-    if os.path.isfile("sorted.rr"):
-        os.remove("sorted.rr")
-
+    ### Read in contacts and sort them on probability (5th column) ### 
     rr_lines = []
-    raw_rr_lines = []
-    with open(rr_file) as rr_handle:
-        raw_rr_lines = rr_handle.read().split('\n')
-    for line in raw_rr_lines:
-        if re.match('^[A-Za-z]', line):
-            continue
-        if len(line) == 0:
-            continue
-        x, y = (int(x) for x in line.split()[:2])
 
-        if (y-x)>rr_sep:
-            rr_lines.append(line.strip().split())
+    with open(rr_file) as rr_handle:
+        for line in rr_handle:
+            if re.match('^[A-Za-z]', line):
+                continue
+            if len(line.strip()) == 0:
+                continue
+            x, y = (int(x) for x in line.strip().split()[:2])
+
+            ### Only use contacts according to separation ###
+            if (y-x)>rr_sep:
+                rr_lines.append(line.strip().split())
+
+    ### Sort and only use contacts above set threshold ###
     rr_lines.sort(key=lambda x: float(x[4]), reverse=True)
     rr_scores = '\n'.join([' '.join(x) for x in rr_lines if float(x[4]) > rr_pthres])
 
-    # for line in rr_lines:
-    # print(len(rr_lines))
-    # print(raw_rr_lines)
-    # print(rr_lines)
-    # print(rr_scores)
-    # subprocess.call("sed -i '/^[A-Z]/d' {}".format(rr_file), shell=True)
-    # subprocess.call("sed -i 's/^ *//' {}".format(rr_file), shell=True)
-    # subprocess.call("sort -nr -s -k5 {} > sorted.rr".format(rr_file),
-    #                 shell=True)
+    ### Remove old contacts file and replace with new sorted and filtered ###
     os.remove(rr_file)
     print2file(rr_file, seq + '\n' + rr_scores + '\n')
-    # subprocess.call("cat sorted.rr >> {}".format(rr_file), shell=True)
-    # os.remove("sorted.rr")
+
     contacts = rr2contacts(rr_file, 1)
 
+    ### Make sure contacts and residues are synced ###
     for key in contacts.keys():
         a, b = key.split()
         if not residues[int(a)]:
@@ -347,13 +367,10 @@ def process_arguments(fasta, ss, rr, dir_out, rrtype, omega, theta, mcount, sele
             clean_output_dir(dir_out)
             sys.exit()
 
-    for r in seq:
-        if r not in AA1TO3:
-            print("ERROR! Undefined amino acid {} in {}".format(r, seq))
-            clean_output_dir(dir_out)
-            sys.exit()
-
+    ### Change back to base directory ###
     os.chdir(base_dir)
+
+    ### If debug is on, print all variables ###
     if debug:
         print("dir_out      {}".format(dir_out))
         print("fasta_file   {}".format(fasta_file))
@@ -363,12 +380,12 @@ def process_arguments(fasta, ss, rr, dir_out, rrtype, omega, theta, mcount, sele
         print("theta_file   {}".format(theta_file))
         print("selectrr     {}".format(selectrr))
         print("rrtype       {}".format(rrtype))
-        # print(lbd)
+        print("Lambda       {}".format(lbd))
         print("id           {}".format(f_id))
         print("L            {}".format(L))
         print("sequence     {}".format(seq))
         print("ss_seq       {}".format(ss_seq))
-    # pair_file
+
     return fasta_file, fasta2_file, rr_file, ss_file, omega_file, theta_file, residues,\
         f_id, selectrr, mini
 
