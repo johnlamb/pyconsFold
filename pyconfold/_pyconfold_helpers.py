@@ -1481,7 +1481,8 @@ def assess_dgsa(stage, fasta_file, ss_file, dir_out, mcount, f_id, num_top_model
     i = 1
     for pdb, noe_energy in sorted(energy_noe.items(),
                                   key=lambda i: i[1]):
-        print("model{}.pdb <= {}".format(i, pdb))
+        if debug:
+            print("model{}.pdb <= {}".format(i, pdb))
         shutil.copy(pdb, os.path.join(dir_out, "{}_model{}.pdb".format(f_id, i)))
         shutil.move(pdb, "{}_model{}.pdb".format(f_id, i))
         print2file(os.path.join(dir_out, "{}_model{}.noe".format(f_id, i)), "{}".format(noe_energy))
