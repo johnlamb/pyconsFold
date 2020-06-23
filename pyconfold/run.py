@@ -123,8 +123,8 @@ def model(fasta, rr, out_dir, fasta2='', ss='', dist=False, rr_pthres=0.0, top_m
             sec_restraints(stage, ss_file, res_dihe, res_hbnd, res_dist,
                            res_strnd_OO, residues, ATOMTYPE, SHIFT, debug)
         ### Use angles files ###
-        use_omega = False if omega_file else True
-        use_theta = False if theta_file else True
+        use_omega = True if omega_file else False
+        use_theta = True if theta_file else False
         if use_omega or use_theta:
             angle_restraints(omega_file, use_omega, theta_file, use_theta, residues)
 
