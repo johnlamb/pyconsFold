@@ -17,6 +17,8 @@ from ._arguments import get_args
 ################## Default dssp ########################################
 program_dssp = os.path.join(os.path.dirname(os.path.realpath(__file__)),\
                             "dssp/dssp-2.0.4-linux-amd64")
+program_pcons = os.path.join(os.path.dirname(os.path.realpath(__file__)),\
+                            "pcons/pcons")
 ########## CNS from env variable #######################################
 cns_suite = os.environ["CNS_SOLVE"]
 cns_executable = cns_suite + "/intel-x86_64bit-linux/bin/cns_solve"
@@ -35,7 +37,7 @@ def initialize(fasta, rr, out_dir, dist, fasta2='', ss='', rrtype='cb', selectrr
     dir_out = os.path.join(base_dir, out_dir)
 
     ### Check so that DSSP and CNS is accessable ###
-    check_programs(program_dssp, cns_suite, cns_executable)
+    check_programs(program_dssp, program_pcons, cns_suite, cns_executable)
 
     ### Process all arguments, check validity and set up inputs ###
     fasta_file, fasta2_file, rr_file, ss_file, omega_file, theta_file, residues, f_id, selectrr, mini =\
