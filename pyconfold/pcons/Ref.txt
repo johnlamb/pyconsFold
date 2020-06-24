@@ -1,0 +1,5 @@
+Automatic consensus based fold recognition using Pcons, ProQ and Pmodeller. Björn Wallner, Huisheng Fang and Arne Elofsson (2003). Proteins. 53 Suppl 6:534-541. 
+
+Pcons5: combining consensus, structural evaluation and fold recognition scores. Björn Wallner and Arne Elofsson (2005). Bioinformatics., 21(23):4248-4254. 
+
+Identification of correct regions in protein models using structural, alignment and consensus information. Björn Wallner and Arne Elofsson (2006). Protein Sci., 15(4):900-913. 

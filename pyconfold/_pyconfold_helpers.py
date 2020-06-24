@@ -22,10 +22,14 @@ CBATOM = {"A": "cb", "N": "cb", "C": "cb", "Q": "cb", "H": "cb", "L": "cb",
           "W": "cb", "V": "cb"}
 
 
-def check_programs(program_dssp, cns_suite, cns_executable):
+def check_programs(program_dssp, program_pcons, cns_suite, cns_executable):
         if not os.path.isfile(program_dssp):
             print("ERROR! Can not find dssp program at " +
                   "{}".format(program_dssp))
+            sys.exit()
+        if not os.path.isfile(program_pcons):
+            print("ERROR! Can not find pcons program at " +
+                  "{}".format(program_pcons))
             sys.exit()
         if not os.path.isdir(cns_suite):
             print("ERROR! Can not find CNS suite folder at " +
