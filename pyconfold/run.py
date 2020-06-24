@@ -88,7 +88,7 @@ def model(fasta, rr, out_dir, fasta2='', ss='', dist=False, rr_pthres=0.0, top_m
     ############# 1. Setup variables and input files #########################
     fasta_file, fasta2_file, rr_file, out_dir, ss_file, omega_file,\
             theta_file, residues, lbd, selectrr, rrtype,\
-            contwt, sswt, mcount, mode, rep1, rep2, mini, f_id, atomselect = initialize(fasta, rr, out_dir, dist, fasta2=fasta2, rr_pthres=rr_pthres, debug=debug)
+            contwt, sswt, mcount, mode, rep1, rep2, mini, f_id, atomselect = initialize(fasta, rr, out_dir, dist, ss=ss, fasta2=fasta2, rr_pthres=rr_pthres, debug=debug)
     setup_working_tree(out_dir)
 
     ### Change working directory into stage1 for further work ###
