@@ -155,5 +155,5 @@ def model_dist(fasta, rr, out_dir, ss='', rr_pthres=0.55, top_models=5, save_ste
 
 ### Docking, a second fasta file is supplied and distance is used by default (trRosetta output)
 def model_dock(fasta, fasta2, rr, out_dir, dist=True, ss='', top_models=5, save_step=False, debug=False):
-    model(fasta, rr, out_dir, ss, fasta2=fasta2, top_models=top_models, save_step=save_step, debug=debug)
+    model(fasta, rr, out_dir, fasta2=fasta2, ss=ss, top_models=top_models, save_step=save_step, debug=debug)
     
