@@ -36,8 +36,8 @@ def check_programs(program_dssp, program_pcons, cns_suite, cns_executable):
                   "{}".format(cns_suite))
             print("Check CNS installation!")
             sys.exit()
-        if not os.path.isfile(cns_suite + "/cns_solve_env.sh"):
-            print("ERROR! cns_solve_env.sh not found inside " +
+        if not os.path.isfile(cns_suite + "/cns_solve_env"):
+            print("ERROR! cns_solve_env not found inside " +
                   "{}".format(cns_suite))
             print("Check CNS installation!")
             sys.exit()
