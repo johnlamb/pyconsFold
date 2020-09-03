@@ -20,6 +20,6 @@ args = parser.parse_args()
 #     dist_error = True if sys.argv[6] == "True" else False
 
 ########## Only uncomment ONE of these lines
-# pyconfold.model(args.fa_file, args.rr_file, args.out_folder, ss=args.ss_file)
-pyconfold.model_dist(args.fa_file, args.rr_file, args.out_folder)
-# pyconfold.model_dock(args.fa_file, args.fa2_file, args.rr_file, args.out_folder)
+# pyconfold.model(args.fa_file, args.rr_file, args.out_dir, ss=args.ss_file)
+pyconfold.model_dist(args.fa_file, args.rr_file, args.out_dir)
+# pyconfold.model_dock(args.fa_file, args.fa2_file, args.rr_file, args.out_dir)
