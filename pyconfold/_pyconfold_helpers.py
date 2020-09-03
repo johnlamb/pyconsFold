@@ -420,7 +420,7 @@ def build_extended(fasta_file, cns_suite, cns_executable, fasta_file2=""):
     # Not needing to generate gseq.inp file, already done as template
     # Not needing to generate extn.inp file, already done as template
     job_file = "#!/bin/bash\n"
-    job_file += "source {}/cns_solve_env.sh\n".format(cns_suite)
+    job_file += "source {}/cns_solve_env\n".format(cns_suite)
     job_file += "export KMP_AFFINITY=none\n"
     job_file += "{} < gseq.inp > gseq.log\n".format(cns_executable)
     job_file += "{} < extn.inp > extn.log".format(cns_executable)
