@@ -9,7 +9,6 @@ import re
 import shutil
 import subprocess
 
-
 AA3TO1 = {"ALA": "A", "ASN": "N", "CYS": "C", "GLN": "Q", "HIS": "H",
           "LEU": "L", "MET": "M", "PRO": "P", "THR": "T", "TYR": "Y",
           "ARG": "R", "ASP": "D", "GLU": "E", "GLY": "G", "ILE": "I",
