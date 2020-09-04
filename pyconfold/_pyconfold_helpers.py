@@ -1012,7 +1012,7 @@ def build_models(stage, fasta_file, ss_file, contwt, sswt, mcount, mode,
     job_file += "echo \"starting cns...\"\n"
     job_file += "touch iam.running\n"
     job_file += "# CNS-CONFIGURATION\n"
-    job_file += "source {}/cns_solve_env.sh\n".format(cns_suite)
+    job_file += "source {}/cns_solve_env\n".format(cns_suite)
     job_file += "export KMP_AFFINITY=none\n"
     job_file += "export CNS_CUSTOMMODULE={}/{}\n".format(dir_out, stage)
     job_file += ("{}/intel-x86_64bit-linux/bin/cns_solve < dgsa.inp " +
