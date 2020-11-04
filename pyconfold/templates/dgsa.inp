@@ -94,7 +94,8 @@
 {===>} pdb.dg.count=$mcount;
 {* seed for random number generator *}
 {* change to get different initial velocities *}
-{===>} md.seed=82364;
+{* {===>} md.seed=82364; *}   
+{===>} md.seed=3141;
 {* select whether the number of structures will be either trial or 	
    accepted structures and whether to print only the trial, accepted, 	
    both sets of structures. The printing format is as follows:

@@ -131,7 +131,7 @@ def model(fasta, rr, out_dir, fasta2='', ss='', dist=False, rr_pthres=0.0, top_m
             angle_restraints(omega_file, use_omega, theta_file, use_theta, residues)
 
         ### Use the generated restraint files to build models ###
-        build_models(stage, fasta_file, ss_file, contwt, sswt, mcount,
+        build_models(stage, fasta_file, fasta2_file, ss_file, contwt, sswt, mcount,
                      mode, rep1, rep2, mini, f_id, atomselect, out_dir, cns_suite, debug)
 
         ### Assess the models and rank them based on NOE energy ###
@@ -155,5 +155,5 @@ def model_dist(fasta, rr, out_dir, ss='', rr_pthres=0.55, top_models=5, save_ste
 
 ### Docking, a second fasta file is supplied and distance is used by default (trRosetta output)
 def model_dock(fasta, fasta2, rr, out_dir, dist=True, ss='', top_models=5, save_step=False, debug=False):
-    model(fasta, rr, out_dir, fasta2=fasta2, ss=ss, top_models=top_models, save_step=save_step, debug=debug)
+    model(fasta, rr, out_dir, fasta2=fasta2, ss=ss, top_models=top_models, save_step=save_step, debug=debug,dist=dist)
     

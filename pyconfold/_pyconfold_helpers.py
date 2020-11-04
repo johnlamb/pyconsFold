@@ -387,7 +387,8 @@ def process_arguments(fasta, rr, dir_out, ss, rrtype, selectrr, fasta2, omega, t
         print("id           {}".format(f_id))
         print("L            {}".format(L))
         print("sequence     {}".format(seq))
-        print("ss_seq       {}".format(ss_seq))
+        if ss:
+            print("ss_seq       {}".format(ss_seq))
 
     return fasta_file, fasta2_file, rr_file, ss_file, omega_file, theta_file, residues,\
         f_id, selectrr, mini
@@ -871,9 +872,12 @@ def tbl2rows(tbl_file):
     return noe
 
 
-def coverage_tbl(fasta_file, tbl, flag_dihe):
+def coverage_tbl(fasta_file, tbl, flag_dihe, fasta_file2=''):
     seq = seq_fasta(fasta_file)
     L = len(seq)
+    if len(fasta_file2)>0:
+        seq += seq_fasta(fasta_file2)
+        L = len(seq)
     cov = re.sub("[A-Z]", "-", seq)
     noe = tbl2rows(tbl)
 
@@ -881,6 +885,8 @@ def coverage_tbl(fasta_file, tbl, flag_dihe):
         # assign (resid 123 and name CA) (resid  58 and name CA)
         # 3.60 0.10 3.40
         C = key.split()
+        print(C)
+        print(cov)
         r1 = int(C[2])
         r2 = int(C[7])
         # the case when "ca or cb" restraints are provided
@@ -982,7 +988,7 @@ def write_cns_dgsa_file(contwt, sswt, mcount, mode,
         print2file(dgsa_file, dgsa_dump)
 
 
-def build_models(stage, fasta_file, ss_file, contwt, sswt, mcount, mode,
+def build_models(stage, fasta_file, fasta2_file, ss_file, contwt, sswt, mcount, mode,
                  rep1, rep2, mini, f_id, atomselect, dir_out, cns_suite, debug):
     tbl_list = {}
     for tbl in ["contact.tbl", "ssnoe.tbl", "hbond.tbl", "dihedral.tbl"]:
@@ -990,6 +996,8 @@ def build_models(stage, fasta_file, ss_file, contwt, sswt, mcount, mode,
             tbl_list[tbl] = count_lines(tbl)
     if debug:
         print(seq_fasta(fasta_file))
+        if len(fasta2_file)>0:
+            print(seq_fasta(fasta2_file))
         if ss_file:
             print(seq_fasta(ss_file))
     flag_dihe = False
@@ -997,7 +1005,7 @@ def build_models(stage, fasta_file, ss_file, contwt, sswt, mcount, mode,
         if tbl == "dihedral.tbl":
             flag_dihe = True
         if debug:
-            print(coverage_tbl(fasta_file, tbl, flag_dihe))
+            print(coverage_tbl(fasta_file, tbl, flag_dihe,fasta2_file))
         flag_dihe = False
 
     for filename in glob.glob("iam.*"):
