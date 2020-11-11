@@ -6,11 +6,11 @@ import os
 import shutil
 import sys
 
-from ._pyconfold_helpers import (assess_dgsa, build_extended, build_models,
+from ._pyconsFold_helpers import (assess_dgsa, build_extended, build_models,
                                  check_programs, clean_output_dir,
                                  contact_restraints, process_arguments,
                                  sec_restraints, xyz_pdb, angle_restraints)
-from ._pyconfold_libs import load_ss_restraints
+from ._pyconsFold_libs import load_ss_restraints
 from .utils import npz_to_casp
 from ._arguments import get_args
 

@@ -1,3 +1,1 @@
-import pyconfold
-
-run_confold()
+import pyconsFold

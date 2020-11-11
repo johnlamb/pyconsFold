@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Docstring"""
 import sys
-import pyconfold
+import pyconsFold
 import argparse
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -20,6 +20,6 @@ args = parser.parse_args()
 #     dist_error = True if sys.argv[6] == "True" else False
 
 ########## Only uncomment ONE of these lines
-pyconfold.model(args.fa_file, args.rr_file, args.out_dir, ss=args.ss)
-# pyconfold.model_dist(args.fa_file, args.rr_file, args.out_dir)
-# pyconfold.model_dock(args.fa_file, args.fa2_file, args.rr_file, args.out_dir)
+pyconsFold.model(args.fa_file, args.rr_file, args.out_dir, ss=args.ss)
+# pyconsFold.model_dist(args.fa_file, args.rr_file, args.out_dir)
+# pyconsFold.model_dock(args.fa_file, args.fa2_file, args.rr_file, args.out_dir)
