@@ -368,6 +368,7 @@ def process_arguments(fasta, rr, dir_out, ss, rrtype, selectrr, fasta2, omega, t
         # Make a contact between the middle of each protein with distance (len(A)/2+len(B)/2)*3.5Å
         print("WARNING, trying to do docking without any predicted contacts between the proteins.")
         print("Adding a weak and distant artificial contact")
+        print("This increases the modelling time significantly")
         mid_first = plen//2
         mid_second = p2len//2
         a_dist = (mid_first + mid_second)*3.5
