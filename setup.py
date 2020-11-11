@@ -4,8 +4,8 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-        name="pyconfold",
-        version="0.0.1",
+        name="pyconsFold"
+        version="0.1",
         author="John Lamb",
         author_email="john@biolamb.se",
         description="A python implementation of the CONFOLD CNS-wrapper",
@@ -21,4 +21,7 @@ setuptools.setup(
             "Operating System :: OS Independent",
             ],
         python_requires='>3.5',
+        extras_requires={
+            "full": ['biopython>=1.7', 'numpy>=1.19', 'scipy>=1.4.0']
+            }
         )

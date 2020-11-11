@@ -11,7 +11,7 @@ from ._pyconfold_helpers import (assess_dgsa, build_extended, build_models,
                                  contact_restraints, process_arguments,
                                  sec_restraints, xyz_pdb, angle_restraints)
 from ._pyconfold_libs import load_ss_restraints
-
+from .utils import npz_to_casp
 from ._arguments import get_args
 
 ################## Default dssp ########################################
