@@ -368,10 +368,10 @@ def process_arguments(fasta, rr, dir_out, ss, rrtype, selectrr, fasta2, omega, t
         # Make a contact between the middle of each protein with distance (len(A)/2+len(B)/2)*3.5Å
         print("WARNING, trying to do docking without any predicted contacts between the proteins.")
         print("Adding a weak and distant artificial contact")
-        print("From {} to {} with distance {}Å and error {}Å".format(mid_first,plen+mid_second,a_dist, a_dist/4))
         mid_first = plen//2
         mid_second = p2len//2
         a_dist = (mid_first + mid_second)*3.5
+        print("From {} to {} with distance {}Å and error {}Å".format(mid_first,plen+mid_second,a_dist, a_dist/4))
         rr_lines.append([str(mid_first), str(plen+mid_second),'0',str(a_dist),str(rr_pthres+0.01),str(a_dist/4)])
     ### Sort and only use contacts above set threshold ###
     rr_lines.sort(key=lambda x: float(x[4]), reverse=True)
