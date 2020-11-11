@@ -22,14 +22,20 @@ CBATOM = {"A": "cb", "N": "cb", "C": "cb", "Q": "cb", "H": "cb", "L": "cb",
 
 
 def check_programs(program_dssp, program_pcons, cns_suite, cns_executable):
-        if not os.path.isfile(program_dssp):
+        if shutil.which("dssp"):
+            program_dssp = shutil.which("dssp")
+        elif not os.path.isfile(program_dssp):
             print("ERROR! Can not find dssp program at " +
                   "{}".format(program_dssp))
             sys.exit()
+
+        if shutil.which("pcons"):
+            program_dssp = shutil.which("pcons")
         if not os.path.isfile(program_pcons):
             print("ERROR! Can not find pcons program at " +
                   "{}".format(program_pcons))
             sys.exit()
+
         if not os.path.isdir(cns_suite):
             print("ERROR! Can not find CNS suite folder at " +
                   "{}".format(cns_suite))
@@ -50,6 +56,7 @@ def check_programs(program_dssp, program_pcons, cns_suite, cns_executable):
                   "{}/libraries/toppar/!".format(cns_executable))
             print("Check CNS installation!")
             sys.exit()
+        return program_dssp, program_pcons, cns_suite, cns_executable
 
 
 def seq_fasta(fasta_file):
@@ -293,12 +300,14 @@ def process_arguments(fasta, rr, dir_out, ss, rrtype, selectrr, fasta2, omega, t
     residues = fasta2residues(fasta_file)
     seq = seq_fasta(fasta_file)
     plen = len(seq)
+    p2len = 0
     chk_errors_seq(seq, dir_out)
 
     ### If we use a second fasta (for docking), check for error and concatenate sequences ###
     if fasta2:
         flatten_fasta(fasta2_file)
         seq2 = seq_fasta(fasta2_file)
+        p2len = len(seq2)
         chk_errors_seq(seq2, dir_out)
 
         ### Update both seq and residues to uuse both files
@@ -337,17 +346,33 @@ def process_arguments(fasta, rr, dir_out, ss, rrtype, selectrr, fasta2, omega, t
     rr_lines = []
 
     with open(rr_file) as rr_handle:
+        contact_between_proteins = False
         for line in rr_handle:
             if re.match('^[A-Za-z]', line):
                 continue
             if len(line.strip()) == 0:
                 continue
             x, y = (int(x) for x in line.strip().split()[:2])
+            if fasta2:
+                #  If we do docking, make sure we at least have one contact between the proteins
+                if ((x < (plen+1)) and (y > plen)) or ((y < (plen+1)) and (x > plen)):
+                    contact_between_proteins = True
+
 
             ### Only use contacts according to separation ###
             if (y-x)>rr_sep:
                 rr_lines.append(line.strip().split())
 
+    if fasta2 and not contact_between_proteins:
+        # We are doing docking but there are no contacts between proteins, adding an artificial one
+        # Make a contact between the middle of each protein with distance (len(A)/2+len(B)/2)*3.5Å
+        print("WARNING, trying to do docking without any predicted contacts between the proteins.")
+        print("Adding a weak and distant artificial contact")
+        print("From {} to {} with distance {}Å and error {}Å".format(mid_first,plen+mid_second,a_dist, a_dist/4))
+        mid_first = plen//2
+        mid_second = p2len//2
+        a_dist = (mid_first + mid_second)*3.5
+        rr_lines.append([str(mid_first), str(plen+mid_second),'0',str(a_dist),str(rr_pthres+0.01),str(a_dist/4)])
     ### Sort and only use contacts above set threshold ###
     rr_lines.sort(key=lambda x: float(x[4]), reverse=True)
     rr_scores = '\n'.join([' '.join(x) for x in rr_lines if float(x[4]) > rr_pthres])

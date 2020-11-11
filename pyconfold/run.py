@@ -15,38 +15,34 @@ from ._pyconfold_libs import load_ss_restraints
 from ._arguments import get_args
 
 ################## Default dssp ########################################
-program_dssp = os.path.join(os.path.dirname(os.path.realpath(__file__)),\
+raw_program_dssp = os.path.join(os.path.dirname(os.path.realpath(__file__)),\
                             "dssp/dssp-2.0.4-linux-amd64")
-program_pcons = os.path.join(os.path.dirname(os.path.realpath(__file__)),\
+raw_program_pcons = os.path.join(os.path.dirname(os.path.realpath(__file__)),\
                             "pcons/pcons")
 ########## CNS from env variable #######################################
-cns_suite = os.environ["CNS_SOLVE"]
-cns_executable = cns_suite + "/intel-x86_64bit-linux/bin/cns_solve"
+raw_cns_suite = os.environ["CNS_SOLVE"]
+raw_cns_executable = raw_cns_suite + "/intel-x86_64bit-linux/bin/cns_solve"
+### Check so that DSSP and CNS is accessable ###
+program_dssp, program_pcons, cns_suite, cns_executable = check_programs(raw_program_dssp, raw_program_pcons, raw_cns_suite, raw_cns_executable)
 ########################################################################
 ATOMTYPE = {"CA": 1, "N": 1, "C": 1, "O": 1}
 SHIFT = {"0": 1, "+1": 1, "-1": 1}
 
 
-def initialize(fasta, rr, out_dir, dist, fasta2='', ss='', rrtype='cb', selectrr="all", omega='', theta='', mcount=20,
-                      lbd=0.4, contwt=10, sswt=5, rep2=0.85, rr_pthres=0.0, rr_sep=5, debug=False):
-    rep1 = 1.0
-    atomselect = 2
-    mode = "trial"
+def _initialize(fasta, rr, out_dir, dist, fasta2='', ss='', rrtype='cb', selectrr="all", omega='', theta='', mcount=20,
+                      lbd=0.4, contwt=10, sswt=5, rep2=0.85, rr_pthres=0.0, rr_sep=5, rep1=1, atomselect=2, mode='trial',debug=False):
 
     base_dir = os.getcwd()
     dir_out = os.path.join(base_dir, out_dir)
-
-    ### Check so that DSSP and CNS is accessable ###
-    check_programs(program_dssp, program_pcons, cns_suite, cns_executable)
 
     ### Process all arguments, check validity and set up inputs ###
     fasta_file, fasta2_file, rr_file, ss_file, omega_file, theta_file, residues, f_id, selectrr, mini =\
             process_arguments(fasta, rr, out_dir, ss, rrtype, selectrr, fasta2, omega, theta, mcount, lbd, contwt, sswt, rep2, rr_pthres, rr_sep, debug)
     return fasta_file, fasta2_file, rr_file, dir_out, ss_file, omega_file, theta_file, residues, lbd,\
-            selectrr, rrtype, contwt, sswt, mcount, mode, rep1, rep2, mini, f_id, atomselect
+            selectrr, rrtype, contwt, sswt, mcount, mode, rep1, rep2, mini, f_id, atomselect, debug
 
 
-def setup_working_tree(dir_out):
+def _setup_working_tree(dir_out):
     ### Setup the work tree, copy from input ###
     module_base = os.path.dirname(os.path.realpath(__file__))
 
@@ -64,7 +60,7 @@ def setup_working_tree(dir_out):
                 os.path.join(dir_out, "stage1/"))
 
 
-def gen_initial_model(fasta_file, residues, fasta2_file, debug):
+def _gen_initial_model(fasta_file, residues, fasta2_file, debug):
     ### Generate initial mtf and pdb ###
     if debug:
         print("\nBuild extended mtf and pdb...")
@@ -86,12 +82,12 @@ def gen_initial_model(fasta_file, residues, fasta2_file, debug):
             sys.exit()
 
 ### Main model function, all other is based on this ###
-def model(fasta, rr, out_dir, fasta2='', ss='', dist=False, rr_pthres=0.0, top_models=5, save_step=False, debug=False):
+def _model(fasta, rr, out_dir, fasta2='', dist=False, rr_pthres=0.55, top_models=5, save_step=False, **kwargs):
     ############# 1. Setup variables and input files #########################
     fasta_file, fasta2_file, rr_file, out_dir, ss_file, omega_file,\
             theta_file, residues, lbd, selectrr, rrtype,\
-            contwt, sswt, mcount, mode, rep1, rep2, mini, f_id, atomselect = initialize(fasta, rr, out_dir, dist, ss=ss, fasta2=fasta2, rr_pthres=rr_pthres, debug=debug)
-    setup_working_tree(out_dir)
+            contwt, sswt, mcount, mode, rep1, rep2, mini, f_id, atomselect, debug = _initialize(fasta, rr, out_dir, dist, fasta2=fasta2, rr_pthres=rr_pthres, **kwargs)
+    _setup_working_tree(out_dir)
 
     ### Change working directory into stage1 for further work ###
     os.chdir(os.path.join(out_dir, "stage1"))
@@ -106,7 +102,7 @@ def model(fasta, rr, out_dir, fasta2='', ss='', dist=False, rr_pthres=0.0, top_m
         print("\nStart [{}]: {}".format("Pyconfold",
                                         datetime.datetime.now().
                                         replace(microsecond=0)))
-    gen_initial_model(fasta_file, residues, fasta2_file, debug)
+    _gen_initial_model(fasta_file, residues, fasta2_file, debug)
 
     ### Currently, only stage1 is implemented ###
     stage_list = []
@@ -148,12 +144,16 @@ def model(fasta, rr, out_dir, fasta2='', ss='', dist=False, rr_pthres=0.0, top_m
                                            replace(microsecond=0)))
 
 
+### Base model function, uses simple binary contacts ###
+def model(fasta, rr, out_dir, top_models=5, save_step=False, **kwargs):
+    _model(fasta, rr, out_dir, dist=False,top_models=top_models, save_step=save_step, **kwargs)
+
 ### Model using distances, distance flag and rr_pthres is set ###
-def model_dist(fasta, rr, out_dir, ss='', rr_pthres=0.55, top_models=5, save_step=False, debug=False):
-    model(fasta, rr, out_dir, ss, dist=True, rr_pthres=rr_pthres, top_models=top_models, save_step=save_step, debug=debug)
+def model_dist(fasta, rr, out_dir, rr_pthres=0.55, top_models=5, save_step=False, debug=False, **kwargs):
+    _model(fasta, rr, out_dir, dist=True, rr_pthres=rr_pthres, top_models=top_models, save_step=save_step, **kwargs)
 
 
 ### Docking, a second fasta file is supplied and distance is used by default (trRosetta output)
-def model_dock(fasta, fasta2, rr, out_dir, dist=True, ss='', top_models=5, save_step=False, debug=False):
-    model(fasta, rr, out_dir, fasta2=fasta2, ss=ss, top_models=top_models, save_step=save_step, debug=debug,dist=dist)
+def model_dock(fasta, fasta2, rr, out_dir, dist=True, top_models=5, save_step=False, **kwargs):
+    _model(fasta, rr, out_dir, fasta2=fasta2, top_models=top_models, save_step=save_step, **kwargs)
     
