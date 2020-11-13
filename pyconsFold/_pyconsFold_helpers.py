@@ -8,6 +8,7 @@ import glob
 import re
 import shutil
 import subprocess
+from .utils import npz_to_casp
 
 AA3TO1 = {"ALA": "A", "ASN": "N", "CYS": "C", "GLN": "Q", "HIS": "H",
           "LEU": "L", "MET": "M", "PRO": "P", "THR": "T", "TYR": "Y",
@@ -183,15 +184,20 @@ def clean_output_dir(dir_out):
 
 
 # pair not implemented
-def process_arguments(fasta, rr, dir_out, ss, rrtype, selectrr, fasta2, omega, theta, mcount,
+def process_arguments(fasta, rr, npz, dir_out, ss, rrtype, selectrr, fasta2, omega, theta, mcount,
                       lbd, contwt, sswt, rep2, rr_pthres, rr_sep, debug):
     ### Check that all files exists ###
     if not os.path.isfile(fasta):
         print("ERROR! Fasta file {} does not exist!".format(fasta))
         sys.exit()
-    if not os.path.isfile(rr):
-        print("ERROR! Contact file {} does not exist!".format(fasta))
-        sys.exit()
+    if npz:
+        if not os.path.isfile(npz):
+            print("ERROR! Contact file {} does not exist!".format(npz))
+            sys.exit()
+    else:
+        if not os.path.isfile(rr):
+            print("ERROR! Contact file {} does not exist!".format(rr))
+            sys.exit()
     if fasta2:
         if not os.path.isfile(fasta2):
             print("ERROR! Fasta file #2 {} does not exist!".format(fasta2))
@@ -207,6 +213,8 @@ def process_arguments(fasta, rr, dir_out, ss, rrtype, selectrr, fasta2, omega, t
     mini = 15 * L
     f_id = os.path.splitext(os.path.basename(fasta))[0]
     f2_id = os.path.splitext(os.path.basename(fasta2))[0]
+    if f2_id == f_id:
+        f2_id += '_2'
 
     ### How many contacts to use? ###
     selectrr = selectrr.replace("L", "")
@@ -260,6 +268,15 @@ def process_arguments(fasta, rr, dir_out, ss, rrtype, selectrr, fasta2, omega, t
     rr_file = f_id + ".rr"
 
     ### Optional files ###
+    if npz:
+        if fasta2:
+            npz_to_casp(npz, fasta_file=fasta, fasta2_file=fasta2)
+        else:
+            npz_to_casp(npz, fasta_file=fasta)
+        rr = npz[:-4] + '.rr'
+        omega = npz[:-4] + '.omega'
+        theta = npz[:-4] + '.theta'
+        phi = npz[:-4] + '.phi'
     if fasta2:
         fasta2_file = f2_id + ".fasta"
     else:
@@ -290,7 +307,8 @@ def process_arguments(fasta, rr, dir_out, ss, rrtype, selectrr, fasta2, omega, t
         shutil.copy(theta, dir_out + "/input/" + theta_file)
 
     ### Move into the input directory ###
-    base_dir = os.path.dirname(os.path.realpath(__file__))
+    # base_dir = os.path.dirname(os.path.realpath(__file__))
+    base_dir = os.getcwd()
     os.chdir(dir_out + "/input")
 
     ### Flatten fasta, make sure it has the sequence on one row ###
@@ -310,13 +328,13 @@ def process_arguments(fasta, rr, dir_out, ss, rrtype, selectrr, fasta2, omega, t
         p2len = len(seq2)
         chk_errors_seq(seq2, dir_out)
 
-        ### Update both seq and residues to uuse both files
+        ### Update both seq and residues to use both files
         fasta2_res = fasta2residues(fasta2_file) 
         inter_dict = {}
         for key, value in fasta2_res.items():
             inter_dict[key+plen] = value
         residues.update(inter_dict)
-        seq = seq + seq_fasta(fasta2_file)
+        seq = seq + seq2
 
     ### Check so that the sequence from the contact file is the same as the sequence from the fasta file ###
     ### (Must be done after a potential second file has been loaded ###

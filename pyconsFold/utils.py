@@ -15,135 +15,144 @@ default_bin_values = {"dist":  Bin_values(0.5, 2, 16, ".rr"),     # In Angstrom
                       "phi":   Bin_values(15,    0, 180, ".phi")}  # Planar angle in degrees
 
 
-def npz_to_casp(input_file, info_key="dist", fasta_file=None,  fasta2_file=None, out_base_path="",
+def npz_to_casp(input_file, info="all", fasta_file=None,  fasta2_file=None, out_base_path="",
                 min_sep=0, pthres=0.5):
     """
     Convert a trRosetta npz-file into casp formated restraints file.
     """
 
-    try:
-        with np.load(input_file) as npz_file:
-            raw_data = npz_file[info_key]
-    except:
-        print("Error reading npz file: " + input_file)
-        sys.exit()
+    if info.lower() == 'all':
+        info_keys = ['dist', 'omega', 'theta', 'phi']
+    else:
+        info_keys = [info]
 
-    target = '.'.join(input_file.split('/')[-1].split('.')[:-1])
 
-    header = '\n'.join(("PFRMAT RR",
-                       "TARGET {}".format(target),
-                       "AUTHOR pyconsFold",
-                       "METHOD trRosetta_contact",
-                       "REMARK {}".format(info_key),
-                       "MODEL 1\n"))
-    # Length of the protein
-    nres = raw_data.shape[0]
-
-    # If a fasta file is supplied, add in the sequence to the header
-    if fasta_file:
-        n=50
+    for info_key in info_keys:
         try:
-            with open(fasta_file) as fasta_handle:
-                fasta_seq = ''.join(fasta_handle.read().split('\n')[1:]).strip()
+            with np.load(input_file) as npz_file:
+                raw_data = npz_file[info_key]
         except:
-            print("Error reading fasta file: "+fasta_file)
+            print("Error reading npz file: " + input_file)
             sys.exit()
+        target = '.'.join(input_file.split('/')[-1].split('.')[:-1])
 
-        if fasta2_file:
+        header = '\n'.join(("PFRMAT RR",
+                           "TARGET {}".format(target),
+                           "AUTHOR pyconsFold",
+                           "METHOD trRosetta_contact",
+                           "REMARK {}".format(info_key),
+                           "MODEL 1\n"))
+        # Length of the protein
+        nres = raw_data.shape[0]
+
+        # If a fasta file is supplied, add in the sequence to the header
+        if fasta_file:
+            n=50
             try:
-                with open(fasta2_file) as fasta2_handle:
-                    fasta_seq += ''.join(fasta2_handle.read().split('\n')[1:]).strip()
+                with open(fasta_file) as fasta_handle:
+                    fasta_seq = ''.join(fasta_handle.read().split('\n')[1:]).strip()
             except:
                 print("Error reading fasta file: "+fasta_file)
                 sys.exit()
 
-        # Assert the fasta sequence is of the same length as the resulting contacts results
-        fasta_length = len(fasta_seq)
-        assert nres == fasta_length, "Sequence from fasta file is not of the same length as" +\
-                                       " the predictions, {} vs {}".format(fasta_length, nres)
+            if fasta2_file:
+                try:
+                    with open(fasta2_file) as fasta2_handle:
+                        fasta_seq += ''.join(fasta2_handle.read().split('\n')[1:]).strip()
+                except:
+                    print("Error reading fasta file: "+fasta_file)
+                    sys.exit()
 
-        header += '\n'.join(fasta_seq[i:i+n] for i in range(0, len(fasta_seq), n))
-        header += '\n' 
+            # Assert the fasta sequence is of the same length as the resulting contacts results
+            fasta_length = len(fasta_seq)
+            assert nres == fasta_length, "Sequence from fasta file is not of the same length as" +\
+                                           " the predictions, {} vs {}".format(fasta_length, nres)
 
-    bin_values= default_bin_values[info_key] 
+            header += '\n'.join(fasta_seq[i:i+n] for i in range(0, len(fasta_seq), n))
+            header += '\n' 
 
-    # Number of bins, minus one for the first contact binary bin
-    nbins = raw_data.shape[-1] - 1
+        bin_values= default_bin_values[info_key] 
 
-    # # How many of the bins do we want?
-    wanted_bins = int((bin_values.max_bin_value - bin_values.min_bin_value)/bin_values.bin_step)
-    if wanted_bins > nbins:
-        print("Number of wanted bins are higher than existing bins")
-        sys.exit()
-    # Generate up the midpoint of each distance bin to be able to
-    # calculate correct distances. Measure in Angstrom
-    bins = np.array([(bin_values.min_bin_value+bin_values.bin_step/2)+bin_values.bin_step*i for i in range(wanted_bins)])
+        # Number of bins, minus one for the first contact binary bin
+        nbins = raw_data.shape[-1] - 1
 
-    # Pull out the predictions, first array element is 
-    # probability of non-contact, only pull out as many bins as we want
-    # [L, L, nbins] -> [L, L, wanted_bins]
-    raw_predictions = raw_data[:,:,1:wanted_bins+1]
+        # # How many of the bins do we want?
+        wanted_bins = int((bin_values.max_bin_value - bin_values.min_bin_value)/bin_values.bin_step)
+        if wanted_bins > nbins:
+            print("Number of wanted bins are higher than existing bins")
+            sys.exit()
+        # Generate up the midpoint of each distance bin to be able to
+        # calculate correct distances. Measure in Angstrom
+        bins = np.array([(bin_values.min_bin_value+bin_values.bin_step/2)+bin_values.bin_step*i for i in range(wanted_bins)])
 
-    # What is the total probability of contact?
-    contact_probabilities = np.sum(raw_predictions, axis=-1)
+        # Pull out the predictions, first array element is 
+        # probability of non-contact, only pull out as many bins as we want
+        # [L, L, nbins] -> [L, L, wanted_bins]
+        raw_predictions = raw_data[:,:,1:wanted_bins+1]
 
-    # Normalize all probabilities by dividing by the sum of the raw_predictions
-    # across the last dimension, [L, L, nbins] -> [L, L, nbins]
-    norm_predictions = np.divide(raw_predictions, np.sum(raw_predictions, axis=-1)[:,:,None])
+        # What is the total probability of contact?
+        contact_probabilities = np.sum(raw_predictions, axis=-1)
 
-    # Multiply normalized predictions with the bin (sizes) to get the correct value distribution
-    values = np.multiply(norm_predictions, bins[None, None, :])
+        # Normalize all probabilities by dividing by the sum of the raw_predictions
+        # across the last dimension, [L, L, nbins] -> [L, L, nbins]
+        norm_predictions = np.divide(raw_predictions, np.sum(raw_predictions, axis=-1)[:,:,None])
 
-    # Make some assertions to confirm array operations har occured correctly
-    # Has the normalization worked?
-    assert np.array_equal(np.divide(raw_predictions[0, 5, :],np.sum(raw_predictions[0,5,:])), norm_predictions[0,5])
-    # Has the multiplication with the bins worked?
-    assert np.array_equal(np.multiply(np.divide(raw_predictions[0, 5, :],np.sum(raw_predictions[0, 5, :])), bins),
-                          values[0,5, :])
+        # Multiply normalized predictions with the bin (sizes) to get the correct value distribution
+        values = np.multiply(norm_predictions, bins[None, None, :])
 
-    # Calculate mean value and errors
-    mean_values = np.sum(values, axis=-1)
-    variances = np.sum(
-                    np.multiply(
-                        np.square(
-                            np.subtract(bins[None,None,:], mean_values[:,:,None])),
-                            norm_predictions), axis=-1)
-    sd = np.sqrt(variances)
+        # Make some assertions to confirm array operations har occured correctly
+        # Has the normalization worked?
+        assert np.array_equal(np.divide(raw_predictions[0, 5, :],np.sum(raw_predictions[0,5,:])), norm_predictions[0,5])
+        # Has the multiplication with the bins worked?
+        assert np.array_equal(np.multiply(np.divide(raw_predictions[0, 5, :],np.sum(raw_predictions[0, 5, :])), bins),
+                              values[0,5, :])
+
+        # Calculate mean value and errors
+        mean_values = np.sum(values, axis=-1)
+        variances = np.sum(
+                        np.multiply(
+                            np.square(
+                                np.subtract(bins[None,None,:], mean_values[:,:,None])),
+                                norm_predictions), axis=-1)
+        sd = np.sqrt(variances)
 
 
-    # Assert summation is correct
-    assert np.array_equal(np.sum(values[0, 5, :]), mean_values[0, 5])
-    # Asser variance is correct
-    assert np.array_equal(np.sum((mean_values[0, 5]-bins)**2*norm_predictions[0,5]), variances[0,5])
+        # Assert summation is correct
+        assert np.array_equal(np.sum(values[0, 5, :]), mean_values[0, 5])
+        # Asser variance is correct
+        assert np.array_equal(np.sum((mean_values[0, 5]-bins)**2*norm_predictions[0,5]), variances[0,5])
 
-    line = "{i} {j} 0 {m:.8f} {c:.8f} {sd:.8f}\n"
-    data = []
+        line = "{i} {j} 0 {m:.8f} {c:.8f} {sd:.8f}\n"
+        data = []
 
-    for i in range(nres-1):
-        for j in range(i+1, nres):
-            if info_key == "dist":
-                if (abs(i - j) > min_sep) and (contact_probabilities[i][j] > pthres):  # and (fasta_seq[i] != 'G') and (fasta_seq[j] != 'G'):
-                    data.append((i+1, j+1, mean_values[i,j], contact_probabilities[i,j], sd[i,j]))
-            else:
-                if (abs(i - j) > min_sep) and (contact_probabilities[i][j] > pthres):  # and (fasta_seq[i] != 'G') and (fasta_seq[j] != 'G'):
-                    data.append((i+1, j+1, mean_values[i,j], contact_probabilities[i,j], sd[i,j]))
-                if info_key == "theta":  # Theta is assymmetric, add the other side of the diagonal if applicable
-                    if (abs(j - i) > min_sep) and (contact_probabilities[j][i] > pthres):  # and (fasta_seq[i] != 'G') and (fasta_seq[j] != 'G'):
-                        data.append((j+1, i+1, mean_values[i,j], contact_probabilities[j,i], sd[j,i]))
+        for i in range(nres-1):
+            for j in range(i+1, nres):
+                if info_key == "dist":
+                    if (abs(i - j) > min_sep) and (contact_probabilities[i][j] > pthres):  # and (fasta_seq[i] != 'G') and (fasta_seq[j] != 'G'):
+                        data.append((i+1, j+1, mean_values[i,j], contact_probabilities[i,j], sd[i,j]))
+                else:
+                    if (abs(i - j) > min_sep) and (contact_probabilities[i][j] > pthres):  # and (fasta_seq[i] != 'G') and (fasta_seq[j] != 'G'):
+                        data.append((i+1, j+1, mean_values[i,j], contact_probabilities[i,j], sd[i,j]))
+                    if info_key == "theta":  # Theta is assymmetric, add the other side of the diagonal if applicable
+                        if (abs(j - i) > min_sep) and (contact_probabilities[j][i] > pthres):  # and (fasta_seq[i] != 'G') and (fasta_seq[j] != 'G'):
+                            data.append((j+1, i+1, mean_values[i,j], contact_probabilities[j,i], sd[j,i]))
 
-    # Sort on the probability of contact
-    data.sort(key=lambda x: x[3], reverse=True)
+        # Sort on the probability of contact
+        data.sort(key=lambda x: x[3], reverse=True)
 
-    content = [header]
+        content = [header]
 
-    # Format each line according to CASP rr format
-    for i, j, m, c, sd in data:
-        content.append(line.format(i=i, j=j, m=m, c=c, sd=sd))
-    content.append("END\n")
-
-    with open(out_base_path + bin_values.ending, 'w') as contacts_handle:
-        contacts_handle.write(''.join(content))
-    # return ''.join(content)
+        # Format each line according to CASP rr format
+        for i, j, m, c, sd in data:
+            content.append(line.format(i=i, j=j, m=m, c=c, sd=sd))
+        content.append("END\n")
+        if out_base_path:
+            out_file = out_base_path + bin_values.ending
+        else:
+            out_file = input_file[:-4] + bin_values.ending
+        with open(out_file, 'w') as contacts_handle:
+            contacts_handle.write(''.join(content))
+        # return ''.join(content)
 
 
 def _virtual_cb_vector(residue):

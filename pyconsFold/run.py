@@ -11,7 +11,6 @@ from ._pyconsFold_helpers import (assess_dgsa, build_extended, build_models,
                                  contact_restraints, process_arguments,
                                  sec_restraints, xyz_pdb, angle_restraints)
 from ._pyconsFold_libs import load_ss_restraints
-from .utils import npz_to_casp
 from ._arguments import get_args
 
 ################## Default dssp ########################################
@@ -29,7 +28,7 @@ ATOMTYPE = {"CA": 1, "N": 1, "C": 1, "O": 1}
 SHIFT = {"0": 1, "+1": 1, "-1": 1}
 
 
-def _initialize(fasta, rr, out_dir, dist, fasta2='', ss='', rrtype='cb', selectrr="all", omega='', theta='', mcount=20,
+def _initialize(fasta, out_dir, dist, rr='', npz='', fasta2='', ss='', rrtype='cb', selectrr="all", omega='', theta='', mcount=20,
                       lbd=0.4, contwt=10, sswt=5, rep2=0.85, rr_pthres=0.0, rr_sep=5, rep1=1, atomselect=2, mode='trial',debug=False):
 
     base_dir = os.getcwd()
@@ -37,7 +36,7 @@ def _initialize(fasta, rr, out_dir, dist, fasta2='', ss='', rrtype='cb', selectr
 
     ### Process all arguments, check validity and set up inputs ###
     fasta_file, fasta2_file, rr_file, ss_file, omega_file, theta_file, residues, f_id, selectrr, mini =\
-            process_arguments(fasta, rr, out_dir, ss, rrtype, selectrr, fasta2, omega, theta, mcount, lbd, contwt, sswt, rep2, rr_pthres, rr_sep, debug)
+            process_arguments(fasta, rr, npz, out_dir, ss, rrtype, selectrr, fasta2, omega, theta, mcount, lbd, contwt, sswt, rep2, rr_pthres, rr_sep, debug)
     return fasta_file, fasta2_file, rr_file, dir_out, ss_file, omega_file, theta_file, residues, lbd,\
             selectrr, rrtype, contwt, sswt, mcount, mode, rep1, rep2, mini, f_id, atomselect, debug
 
@@ -82,14 +81,15 @@ def _gen_initial_model(fasta_file, residues, fasta2_file, debug):
             sys.exit()
 
 ### Main model function, all other is based on this ###
-def _model(fasta, rr, out_dir, fasta2='', dist=False, rr_pthres=0.55, top_models=5, save_step=False, **kwargs):
+def _model(fasta, out_dir, rr='', npz='', fasta2='', dist=False, rr_pthres=0.55, top_models=5, save_step=False, **kwargs):
     ############# 1. Setup variables and input files #########################
     fasta_file, fasta2_file, rr_file, out_dir, ss_file, omega_file,\
             theta_file, residues, lbd, selectrr, rrtype,\
-            contwt, sswt, mcount, mode, rep1, rep2, mini, f_id, atomselect, debug = _initialize(fasta, rr, out_dir, dist, fasta2=fasta2, rr_pthres=rr_pthres, **kwargs)
+            contwt, sswt, mcount, mode, rep1, rep2, mini, f_id, atomselect, debug = _initialize(fasta, out_dir, dist, rr=rr, npz=npz, fasta2=fasta2, rr_pthres=rr_pthres, **kwargs)
     _setup_working_tree(out_dir)
 
     ### Change working directory into stage1 for further work ###
+    start_dir = os.getcwd()
     os.chdir(os.path.join(out_dir, "stage1"))
 
     ### Only get default ss geometry data if we are going to use it ###
@@ -135,6 +135,7 @@ def _model(fasta, rr, out_dir, fasta2='', dist=False, rr_pthres=0.55, top_models
                     program_dssp, debug)
 
         ##################### 3. Cleanup ##########################
+    os.chdir(start_dir)
     if not save_step:
         clean_output_dir(out_dir)
 
@@ -145,15 +146,15 @@ def _model(fasta, rr, out_dir, fasta2='', dist=False, rr_pthres=0.55, top_models
 
 
 ### Base model function, uses simple binary contacts ###
-def model(fasta, rr, out_dir, top_models=5, save_step=False, **kwargs):
-    _model(fasta, rr, out_dir, dist=False,top_models=top_models, save_step=save_step, **kwargs)
+def model(fasta, out_dir, rr='', npz='', top_models=5, save_step=False, **kwargs):
+    _model(fasta, out_dir, rr=rr, npz=npz, dist=False,top_models=top_models, save_step=save_step, **kwargs)
 
 ### Model using distances, distance flag and rr_pthres is set ###
-def model_dist(fasta, rr, out_dir, rr_pthres=0.55, top_models=5, save_step=False, debug=False, **kwargs):
-    _model(fasta, rr, out_dir, dist=True, rr_pthres=rr_pthres, top_models=top_models, save_step=save_step, **kwargs)
+def model_dist(fasta, out_dir, rr='', npz='', rr_pthres=0.55, top_models=5, save_step=False, debug=False, **kwargs):
+    _model(fasta, out_dir, rr=rr, npz=npz, dist=True, rr_pthres=rr_pthres, top_models=top_models, save_step=save_step, **kwargs)
 
 
 ### Docking, a second fasta file is supplied and distance is used by default (trRosetta output)
-def model_dock(fasta, fasta2, rr, out_dir, dist=True, top_models=5, save_step=False, **kwargs):
-    _model(fasta, rr, out_dir, fasta2=fasta2, top_models=top_models, save_step=save_step, **kwargs)
+def model_dock(fasta, fasta2, out_dir, rr='', npz='', dist=True, top_models=5, save_step=False, **kwargs):
+    _model(fasta, out_dir, rr=rr, npz=npz, fasta2=fasta2, top_models=top_models, save_step=save_step, **kwargs)
     

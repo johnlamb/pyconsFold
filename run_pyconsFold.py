@@ -13,11 +13,6 @@ parser.add_argument("-fa2_file", "--fa2", type=str, help="input sequence file in
 parser.add_argument("-ss_file", "--ss", default='', type=str, help="Secondary structure file in ss2/3 format")
 
 args = parser.parse_args()
-# dist = False
-# dist_error = False
-# if len(sys.argv) > 5:
-#     dist = True if sys.argv[5] == "True" else False
-#     dist_error = True if sys.argv[6] == "True" else False
 
 ########## Only uncomment ONE of these lines
 pyconsFold.model(args.fa_file, args.rr_file, args.out_dir, ss=args.ss)
