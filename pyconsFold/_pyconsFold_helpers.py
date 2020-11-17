@@ -194,10 +194,14 @@ def process_arguments(fasta, rr, npz, dir_out, ss, rrtype, selectrr, fasta2, ome
         if not os.path.isfile(npz):
             print("ERROR! Contact file {} does not exist!".format(npz))
             sys.exit()
-    else:
+    elif rr:
         if not os.path.isfile(rr):
             print("ERROR! Contact file {} does not exist!".format(rr))
             sys.exit()
+    else:
+        print("ERROR! At least one contact file needs to be supplied, rr or npz!")
+        sys.exit()
+
     if fasta2:
         if not os.path.isfile(fasta2):
             print("ERROR! Fasta file #2 {} does not exist!".format(fasta2))

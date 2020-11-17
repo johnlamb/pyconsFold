@@ -8,19 +8,21 @@ from collections import namedtuple
 import sys
 
 
-Bin_values = namedtuple("Bin_values", ["bin_step", "min_bin_value", "max_bin_value", "ending"])
-default_bin_values = {"dist":  Bin_values(0.5, 2, 16, ".rr"),     # In Angstrom
-                      "omega": Bin_values(15, -180, 180, ".omega"),  # Dihedral angle in degrees
-                      "theta": Bin_values(15, -180, 180, ".theta"),  # Dihedral angle in degrees
-                      "phi":   Bin_values(15,    0, 180, ".phi")}  # Planar angle in degrees
-
-
 def npz_to_casp(input_file, info="all", fasta_file=None,  fasta2_file=None, out_base_path="",
-                min_sep=0, pthres=0.5):
+        min_sep=0, pthres=0.5, bin_values={}):
     """
     Convert a trRosetta npz-file into casp formated restraints file.
     """
 
+    Bin_values = namedtuple("Bin_values", ["bin_step", "min_bin_value", "max_bin_value", "ending"])
+    default_bin_values = {"dist":  Bin_values(0.5, 2, 16, ".rr"),     # In Angstrom
+                      "omega": Bin_values(15, -180, 180, ".omega"),  # Dihedral angle in degrees
+                      "theta": Bin_values(15, -180, 180, ".theta"),  # Dihedral angle in degrees
+                      "phi":   Bin_values(15,    0, 180, ".phi")}  # Planar angle in degrees
+    if bin_values:
+        for key in bin_values.keys():
+            if key in default_bin_values:
+                default_bin_values[key] = Bin_values(*bin_values[key])
     if info.lower() == 'all':
         info_keys = ['dist', 'omega', 'theta', 'phi']
     else:

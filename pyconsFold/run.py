@@ -29,7 +29,7 @@ SHIFT = {"0": 1, "+1": 1, "-1": 1}
 
 
 def _initialize(fasta, out_dir, dist, rr='', npz='', fasta2='', ss='', rrtype='cb', selectrr="all", omega='', theta='', mcount=20,
-                      lbd=0.4, contwt=10, sswt=5, rep2=0.85, rr_pthres=0.0, rr_sep=5, rep1=1, atomselect=2, mode='trial',debug=False):
+                      lbd=0.4, contwt=10, sswt=5, rep2=0.85, rr_pthres=0.0, rr_sep=5, rep1=1, atomselect=2, mode='trial',debug=False, bin_values={}):
 
     base_dir = os.getcwd()
     dir_out = os.path.join(base_dir, out_dir)
