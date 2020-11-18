@@ -259,6 +259,8 @@ def process_arguments(fasta, rr, npz, dir_out, ss, rrtype, selectrr, fasta2, ome
     dir_out = os.path.abspath(os.path.join(os.getcwd(), dir_out))
     if not os.path.isdir(dir_out):
         os.mkdir(dir_out)
+    else:
+        shutil.rmtree(dir_out)
     if os.path.isdir(dir_out + "/input"):
         shutil.rmtree(dir_out + "/input")
     if os.path.isdir(dir_out + "/stage1"):
@@ -1538,6 +1540,7 @@ def assess_dgsa(stage, fasta_file, ss_file, dir_out, mcount, f_id, num_top_model
     #     if debug:
     #         print()
     i = 1
+    return_array = [] 
     for pdb, noe_energy in sorted(energy_noe.items(),
                                   key=lambda i: i[1]):
         if debug:
@@ -1547,6 +1550,50 @@ def assess_dgsa(stage, fasta_file, ss_file, dir_out, mcount, f_id, num_top_model
         print2file(os.path.join(dir_out, "{}_model{}.noe".format(f_id, i)), "{}".format(noe_energy))
         i += 1
         # if i > mcount:
+        return_array.append(["{}_model{}.noe".format(f_id, i), noe_energy])
         if i > num_top_models:   # Only move the top models
             break
     os.remove("dgsa.log")
+    return return_array
+
+
+def qa_pcons(dir_out, f_id, program_pcons, debug):
+    command = '{} -d {} -A'.format(program_pcons, dir_out)
+    process = subprocess.Popen([command],
+                               stdout=subprocess.PIPE, shell=True)
+    pcons_rows = process.communicate()[0].decode("utf-8")
+    return_array = [] 
+    for line in pcons_rows.split('\n'):
+        if line.startswith(f_id):
+            pdb_file, pcons_score = line.split()[:2]
+            return_array.append([pdb_file, float(pcons_score)])
+    return return_array
+
+
+def qa_tmscore(dir_out, native_struct, debug):
+    model_list = load_pdb(dir_out)
+    return_array = [] 
+    for model in model_list:
+        command = 'TMscore {} {}'.format(model, native_struct)
+        process = subprocess.Popen([command],
+                                   stdout=subprocess.PIPE, shell=True)
+        tmscore_rows = process.communicate()[0].decode("utf-8")
+        for line in tmscore_rows.split("\n"):
+            if line.startswith("TM-score"):
+                tmscore = line.split()[2]
+                return_array.append([model.split('\n')[-1], float(tmscore)])
+    return return_array
+    # seq = seq_fasta(fasta_file)
+    # pdb_list = load_pdb(os.path.join(dir_out, stage))
+    # if len(pdb_list) < 2:
+    #     print(("ERROR! Something went wrong while running CNS in {}. Try a " +
+    #            "different atom selection scheme!").format(stage))
+    #     sys.exit()
+    # if len(pdb_list) < (mcount - 1):
+    #     print(("Warning!! There are some issues! {} models were not " +
+    #            "generated in {}! Try a different atom selection scheme")
+    #           .format(mcount, stage))
+    # tbl_list = {}
+    # for tbl in ["contact.tbl", "ssnoe.tbl", "hbond.tbl", "dihedral.tbl"]:
+    #     if os.path.isfile(tbl):
+    #         tbl_list[tbl] = count_lines(tbl)

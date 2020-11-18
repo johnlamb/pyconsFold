@@ -15,6 +15,7 @@ parser.add_argument("-ss_file", "--ss", default='', type=str, help="Secondary st
 args = parser.parse_args()
 
 ########## Only uncomment ONE of these lines
-pyconsFold.model(args.fa_file, args.rr_file, args.out_dir, ss=args.ss)
-# pyconsFold.model_dist(args.fa_file, args.rr_file, args.out_dir)
-# pyconsFold.model_dock(args.fa_file, args.fa2_file, args.rr_file, args.out_dir)
+pyconsFold.model(args.fa_file, args.out_dir, rr=args.rr_file, ss=args.ss,save_step=True, tmscore_pdb_file="tests/data/2hiuA.pdb")
+# pyconsFold.model_dist(args.fa_file, args.out_dir, rr=args.rr_file)
+# pyconsFold.model_dock(args.fa_file, args.fa2_file, args.out_dir, rr=args.rr_file)
+

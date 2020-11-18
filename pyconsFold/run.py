@@ -9,7 +9,8 @@ import sys
 from ._pyconsFold_helpers import (assess_dgsa, build_extended, build_models,
                                  check_programs, clean_output_dir,
                                  contact_restraints, process_arguments,
-                                 sec_restraints, xyz_pdb, angle_restraints)
+                                 sec_restraints, xyz_pdb, angle_restraints,
+                                 qa_pcons, qa_tmscore, print2file)
 from ._pyconsFold_libs import load_ss_restraints
 from ._arguments import get_args
 
@@ -21,24 +22,31 @@ raw_program_pcons = os.path.join(os.path.dirname(os.path.realpath(__file__)),\
 ########## CNS from env variable #######################################
 raw_cns_suite = os.environ["CNS_SOLVE"]
 raw_cns_executable = raw_cns_suite + "/intel-x86_64bit-linux/bin/cns_solve"
+########################################################################
 ### Check so that DSSP and CNS is accessable ###
 program_dssp, program_pcons, cns_suite, cns_executable = check_programs(raw_program_dssp, raw_program_pcons, raw_cns_suite, raw_cns_executable)
-########################################################################
+
 ATOMTYPE = {"CA": 1, "N": 1, "C": 1, "O": 1}
 SHIFT = {"0": 1, "+1": 1, "-1": 1}
 
 
 def _initialize(fasta, out_dir, dist, rr='', npz='', fasta2='', ss='', rrtype='cb', selectrr="all", omega='', theta='', mcount=20,
-                      lbd=0.4, contwt=10, sswt=5, rep2=0.85, rr_pthres=0.0, rr_sep=5, rep1=1, atomselect=2, mode='trial',debug=False, bin_values={}):
+                      lbd=0.4, contwt=10, sswt=5, rep2=0.85, rr_pthres=0.0, rr_sep=5, rep1=1, atomselect=2, mode='trial',debug=False, bin_values={},tmscore_pdb_file=False):
 
+    #### If we should use tmscore to compare to native structure, make sure it is installed and accessable ###
+    if tmscore_pdb_file:
+        if not shutil.which("TMscore"):
+            print("ERROR! You can only compare the models against a native structure if you have TMscore installed")
+            print("Please install TMscore to use")
+            sys.exit()
     base_dir = os.getcwd()
     dir_out = os.path.join(base_dir, out_dir)
 
     ### Process all arguments, check validity and set up inputs ###
     fasta_file, fasta2_file, rr_file, ss_file, omega_file, theta_file, residues, f_id, selectrr, mini =\
-            process_arguments(fasta, rr, npz, out_dir, ss, rrtype, selectrr, fasta2, omega, theta, mcount, lbd, contwt, sswt, rep2, rr_pthres, rr_sep, debug)
+            process_arguments(fasta, rr, npz, dir_out, ss, rrtype, selectrr, fasta2, omega, theta, mcount, lbd, contwt, sswt, rep2, rr_pthres, rr_sep, debug)
     return fasta_file, fasta2_file, rr_file, dir_out, ss_file, omega_file, theta_file, residues, lbd,\
-            selectrr, rrtype, contwt, sswt, mcount, mode, rep1, rep2, mini, f_id, atomselect, debug
+            selectrr, rrtype, contwt, sswt, mcount, mode, rep1, rep2, mini, f_id, atomselect, debug, tmscore_pdb_file
 
 
 def _setup_working_tree(dir_out):
@@ -85,7 +93,7 @@ def _model(fasta, out_dir, rr='', npz='', fasta2='', dist=False, rr_pthres=0.55,
     ############# 1. Setup variables and input files #########################
     fasta_file, fasta2_file, rr_file, out_dir, ss_file, omega_file,\
             theta_file, residues, lbd, selectrr, rrtype,\
-            contwt, sswt, mcount, mode, rep1, rep2, mini, f_id, atomselect, debug = _initialize(fasta, out_dir, dist, rr=rr, npz=npz, fasta2=fasta2, rr_pthres=rr_pthres, **kwargs)
+            contwt, sswt, mcount, mode, rep1, rep2, mini, f_id, atomselect, debug, tmscore_pdb_file = _initialize(fasta, out_dir, dist, rr=rr, npz=npz, fasta2=fasta2, rr_pthres=rr_pthres, **kwargs)
     _setup_working_tree(out_dir)
 
     ### Change working directory into stage1 for further work ###
@@ -131,11 +139,28 @@ def _model(fasta, out_dir, rr='', npz='', fasta2='', dist=False, rr_pthres=0.55,
                      mode, rep1, rep2, mini, f_id, atomselect, out_dir, cns_suite, debug)
 
         ### Assess the models and rank them based on NOE energy ###
-        assess_dgsa(stage, fasta_file, ss_file, out_dir, mcount, f_id, top_models,
+        noe_scores = assess_dgsa(stage, fasta_file, ss_file, out_dir, mcount, f_id, top_models,
                     program_dssp, debug)
+        ### Go back to star dir and run QA ###
+        os.chdir(start_dir)
+        ### Run QA programs for the top models ###
+        pcons_scores = qa_pcons(out_dir, f_id, program_dssp, debug)
 
+        ### If we have native structure, run with TMscore ###
+        if tmscore_pdb_file:
+            tmscores = qa_tmscore(out_dir, tmscore_pdb_file, debug)
+
+        scores = ""
+        for noe in noe_scores:
+            scores += "NOE {} {}\n".format(noe[0], noe[1])
+        for pcons in pcons_scores:
+            scores += "pcons {} {}\n".format(pcons[0], pcons[1])
+        if tmscore_pdb_file:
+            for tmscore in tmscores:
+                scores += "TMscore {} {}\n".format(tmscore[0], tmscore[1])
+
+        print2file(out_dir + "/qa_scores.txt", scores)
         ##################### 3. Cleanup ##########################
-    os.chdir(start_dir)
     if not save_step:
         clean_output_dir(out_dir)
 
