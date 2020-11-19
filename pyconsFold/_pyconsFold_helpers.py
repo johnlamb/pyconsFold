@@ -608,7 +608,7 @@ def rr2tbl(rr_file, tbl_file, rrtype, dir_out, dist):
     # to_print.append("END")
     if len(to_print) > 20000:
         for i in range(1,(len(to_print)//20000) + 2):
-            print2file(tbl_file.format(i), '\n'.join(to_print[(i-1)*20000:i*20000] + '\n'))
+            print2file(tbl_file.format(i), '\n'.join(to_print[(i-1)*20000:i*20000]) + '\n')
     print2file(tbl_file.format(1), '\n'.join(to_print) + '\n')
 
 
