@@ -261,6 +261,7 @@ def process_arguments(fasta, rr, npz, dir_out, ss, rrtype, selectrr, fasta2, ome
         os.mkdir(dir_out)
     else:
         shutil.rmtree(dir_out)
+        os.mkdir(dir_out)
     if os.path.isdir(dir_out + "/input"):
         shutil.rmtree(dir_out + "/input")
     if os.path.isdir(dir_out + "/stage1"):
@@ -582,6 +583,7 @@ def rr2tbl(rr_file, tbl_file, rrtype, dir_out, dist):
     if os.path.isfile(tbl_file):
         os.remove(tbl_file)
     to_print = []
+    # to_print = ["NOE\n class noe\n nrestraints=10000000"]
     for key, value in sorted(r1a1r2a2.items(), key=lambda i: i[1][1], reverse=True):
         # print(key, "=>", r1a1r2a2[key])
         C = key.split()
@@ -603,6 +605,7 @@ def rr2tbl(rr_file, tbl_file, rrtype, dir_out, dist):
                         "(resid {:>3} and name {:>2}) ".format(C[2], C[3]) +
                         "{:.2f} {:.2f} ".format(distance, negdev) +
                         "{:.2f}".format(posdev))
+    # to_print.append("END")
     print2file(tbl_file, '\n'.join(to_print) + '\n')
 
 
@@ -993,7 +996,7 @@ def write_cns_gseq(input_file, plen):
 
 
 def write_cns_dgsa_file(contwt, sswt, mcount, mode,
-                        rep1, rep2, mini, f_id, atomselect):
+                        rep1, rep2, mini, f_id, atomselect, n_contacts):
     dgsa_files = ["dgsa.inp"]
     dihed_wt1 = contwt * sswt
     dihed_wt2 = contwt * sswt
@@ -1024,6 +1027,7 @@ def write_cns_dgsa_file(contwt, sswt, mcount, mode,
     for dgsa_file in dgsa_files:
         with open(dgsa_file) as dgsa_handle:
             dgsa_dump = dgsa_handle.read()
+            dgsa_dump = re.sub("\$nres", str(n_contacts), dgsa_dump)
             dgsa_dump = re.sub("\$contwt", str(contwt), dgsa_dump)
             dgsa_dump = re.sub("\$mcount", str(mcount), dgsa_dump)
             dgsa_dump = re.sub("\$mode", str(mode), dgsa_dump)
@@ -1044,6 +1048,8 @@ def build_models(stage, fasta_file, fasta2_file, ss_file, contwt, sswt, mcount, 
     for tbl in ["contact.tbl", "ssnoe.tbl", "hbond.tbl", "dihedral.tbl"]:
         if os.path.isfile(tbl):
             tbl_list[tbl] = count_lines(tbl)
+
+    n_contacts = tbl_list["contact.tbl"]
     if debug:
         print(seq_fasta(fasta_file))
         if len(fasta2_file)>0:
@@ -1062,7 +1068,7 @@ def build_models(stage, fasta_file, fasta2_file, ss_file, contwt, sswt, mcount, 
         os.remove(filename)
     write_cns_customized_modules(sswt)
     write_cns_dgsa_file(contwt, sswt, mcount, mode, rep1, rep2,
-                        mini, f_id, atomselect)
+                        mini, f_id, atomselect, n_contacts)
     for tbl in ["contact.tbl", "ssnoe.tbl", "hbond.tbl", "dihedral.tbl"]:
         if tbl not in tbl_list:
             subprocess.call("sed -i s/{}//g dgsa.inp".format(tbl), shell=True)
@@ -1553,7 +1559,6 @@ def assess_dgsa(stage, fasta_file, ss_file, dir_out, mcount, f_id, num_top_model
         return_array.append(["{}_model{}.noe".format(f_id, i), noe_energy])
         if i > num_top_models:   # Only move the top models
             break
-    os.remove("dgsa.log")
     return return_array
 
 
