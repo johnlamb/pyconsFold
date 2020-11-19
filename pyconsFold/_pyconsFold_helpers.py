@@ -606,7 +606,10 @@ def rr2tbl(rr_file, tbl_file, rrtype, dir_out, dist):
                         "{:.2f} {:.2f} ".format(distance, negdev) +
                         "{:.2f}".format(posdev))
     # to_print.append("END")
-    print2file(tbl_file, '\n'.join(to_print) + '\n')
+    if len(to_print) > 20000:
+        for i in range(1,(len(to_print)//20000) + 2):
+            print2file(tbl_file.format(i), '\n'.join(to_print[(i-1)*20000:i*20000] + '\n'))
+    print2file(tbl_file.format(1), '\n'.join(to_print) + '\n')
 
 
 def contact_restraints(stage, selectrr, rrtype, dir_out, dist, rr_file=None):
@@ -629,7 +632,7 @@ def contact_restraints(stage, selectrr, rrtype, dir_out, dist, rr_file=None):
         # subprocess.call("mv temp.rr {}".format(rr_file), shell=True)
         os.remove(rr_file)
         print2file(rr_file, ''.join(rr_data))
-        rr2tbl(rr_file, "contact.tbl", rrtype, dir_out, dist)
+        rr2tbl(rr_file, "contact{}.tbl", rrtype, dir_out, dist)
 
 
 def angle_restraints(omega_file, use_omega, theta_file, use_theta, residues, seq_sep=1):
@@ -996,7 +999,7 @@ def write_cns_gseq(input_file, plen):
 
 
 def write_cns_dgsa_file(contwt, sswt, mcount, mode,
-                        rep1, rep2, mini, f_id, atomselect, n_contacts):
+                        rep1, rep2, mini, f_id, atomselect):
     dgsa_files = ["dgsa.inp"]
     dihed_wt1 = contwt * sswt
     dihed_wt2 = contwt * sswt
@@ -1027,7 +1030,6 @@ def write_cns_dgsa_file(contwt, sswt, mcount, mode,
     for dgsa_file in dgsa_files:
         with open(dgsa_file) as dgsa_handle:
             dgsa_dump = dgsa_handle.read()
-            dgsa_dump = re.sub("\$nres", str(n_contacts), dgsa_dump)
             dgsa_dump = re.sub("\$contwt", str(contwt), dgsa_dump)
             dgsa_dump = re.sub("\$mcount", str(mcount), dgsa_dump)
             dgsa_dump = re.sub("\$mode", str(mode), dgsa_dump)
@@ -1045,11 +1047,10 @@ def write_cns_dgsa_file(contwt, sswt, mcount, mode,
 def build_models(stage, fasta_file, fasta2_file, ss_file, contwt, sswt, mcount, mode,
                  rep1, rep2, mini, f_id, atomselect, dir_out, cns_suite, debug):
     tbl_list = {}
-    for tbl in ["contact.tbl", "ssnoe.tbl", "hbond.tbl", "dihedral.tbl"]:
+    for tbl in ["contact1.tbl", "contact3.tbl","contact3.tbl","contact4.tbl","ssnoe.tbl", "hbond.tbl", "dihedral.tbl"]:
         if os.path.isfile(tbl):
             tbl_list[tbl] = count_lines(tbl)
 
-    n_contacts = tbl_list["contact.tbl"]
     if debug:
         print(seq_fasta(fasta_file))
         if len(fasta2_file)>0:
@@ -1068,8 +1069,8 @@ def build_models(stage, fasta_file, fasta2_file, ss_file, contwt, sswt, mcount, 
         os.remove(filename)
     write_cns_customized_modules(sswt)
     write_cns_dgsa_file(contwt, sswt, mcount, mode, rep1, rep2,
-                        mini, f_id, atomselect, n_contacts)
-    for tbl in ["contact.tbl", "ssnoe.tbl", "hbond.tbl", "dihedral.tbl"]:
+                        mini, f_id, atomselect)
+    for tbl in ["contact1.tbl", "contact2.tbl", "contact3.tbl", "contact4.tbl", "ssnoe.tbl", "hbond.tbl", "dihedral.tbl"]:
         if tbl not in tbl_list:
             subprocess.call("sed -i s/{}//g dgsa.inp".format(tbl), shell=True)
     job_file = "#!/bin/bash\n"
@@ -1384,8 +1385,6 @@ def seq_chain(chain):
 
 
 def noe_tbl_violation_coverage(pdb, tbl):
-    # pdb = "/home/johnlamb/projects/confold_python/output/short_test/stage1/short_4.pdb"
-    # tbl = "contact.tbl"
     cov = seq_chain(pdb)
     cov = re.sub("[A-Z]", "-", cov)
     tbl_hash = ssnoe_tbl_min_pdb_dist(tbl, pdb)
@@ -1430,7 +1429,7 @@ def assess_dgsa(stage, fasta_file, ss_file, dir_out, mcount, f_id, num_top_model
                "generated in {}! Try a different atom selection scheme")
               .format(mcount, stage))
     tbl_list = {}
-    for tbl in ["contact.tbl", "ssnoe.tbl", "hbond.tbl", "dihedral.tbl"]:
+    for tbl in ["contact1.tbl", "contact2.tbl","contact3.tbl","contact4.tbl", "ssnoe.tbl", "hbond.tbl", "dihedral.tbl"]:
         if os.path.isfile(tbl):
             tbl_list[tbl] = count_lines(tbl)
 
@@ -1532,10 +1531,6 @@ def assess_dgsa(stage, fasta_file, ss_file, dir_out, mcount, f_id, num_top_model
     #               .format(n1, n2, n3, n4, s1, s2, s3, os.path.basename(pdb)))
 
     # for pdb in sorted(energy_noe.keys(), reverse=True):
-    #     ss = pdb2ss(pdb, program_dssp)
-    #     ss = re.sub("C", "-", ss)
-    #     if debug:
-    #         print("{} [{}]".format(ss, os.path.basename(pdb)))
 
     # for tbl in sorted(tbl_list.keys()):
     #     if "dihedral" in tbl:
