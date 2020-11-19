@@ -11,7 +11,7 @@ parser.add_argument("out_dir", type=str, help="Output directory to write results
 
 parser.add_argument("-fa2_file", "--fa2", type=str, help="input sequence file in FASTA format for the second sequence")
 parser.add_argument("-ss_file", "--ss", default='', type=str, help="Secondary structure file in ss2/3 format")
-parser.add_argument("-L", "--L", default=0.55 type=float, help="Cutoff for contacts")
+parser.add_argument("-L", "--L", default=0.55, type=float, help="Cutoff for contacts")
 
 args = parser.parse_args()
 
