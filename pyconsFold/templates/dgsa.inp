@@ -208,7 +208,6 @@ $a_select
    set the file name to null ("") -}
 {* NOE distance restraints files. *}
 {* restraint set 1 file *}
-{===>} nmr.noe.nrestraints=$nres;
 {===>} nmr.noe.file.1="contact.tbl";
 {* restraint set 2 file *}
 {===>} nmr.noe.file.2="ssnoe.tbl";
@@ -487,7 +486,8 @@ set seed=&md.seed end
                              flag=&flg;
                              output=$nmr; )
 {- Read and store the number of NMR restraints -}
-   @CNS_NMRMODULE:restraintnumber ( num=$num; )
+{-   @CNS_NMRMODULE:restraintnumber ( num=$num; ) -}
+   @CNS_NMRMODULE:restraintnumber ( num=$nres; )
    
 {- Set mass and parameter values -}
    
