@@ -208,7 +208,7 @@ $a_select
    set the file name to null ("") -}
 {* NOE distance restraints files. *}
 {* restraint set 1 file *}
-{===>} NRES=$nres;
+{===>} nmr.noe.nrestraints=$nres;
 {===>} nmr.noe.file.1="contact.tbl";
 {* restraint set 2 file *}
 {===>} nmr.noe.file.2="ssnoe.tbl";
