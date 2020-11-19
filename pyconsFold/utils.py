@@ -9,7 +9,7 @@ import sys
 
 
 def npz_to_casp(input_file, info="all", fasta_file=None,  fasta2_file=None, out_base_path="",
-        min_sep=0, pthres=0.5, bin_values={}):
+        min_sep=0, pthres=0.15, bin_values={}):
     """
     Convert a trRosetta npz-file into casp formated restraints file.
     """
