@@ -916,9 +916,8 @@ def tbl2rows(tbl_file):
     noe = {}
     with open(tbl_file) as tbl_handle:
         for line in tbl_handle:
-            # print(line)
             w_line = line.strip()
-            # print(w_line)
+            # This also handles the contact.tbl first line(setting nrestraints)
             if not w_line.startswith("assign"):
                 continue
             w_line = re.sub("[\(\)]", " ", w_line)
