@@ -1049,9 +1049,14 @@ def write_cns_dgsa_file(contwt, sswt, mcount, mode,
 def build_models(stage, fasta_file, fasta2_file, ss_file, contwt, sswt, mcount, mode,
                  rep1, rep2, mini, f_id, atomselect, dir_out, cns_suite, debug):
     tbl_list = {}
-    for tbl in ["contact1.tbl", "contact3.tbl","contact3.tbl","contact4.tbl","ssnoe.tbl", "hbond.tbl", "dihedral.tbl"]:
-        if os.path.isfile(tbl):
-            tbl_list[tbl] = count_lines(tbl)
+    for tbl in ["contact.tbl", "ssnoe.tbl", "hbond.tbl", "dihedral.tbl"]:
+        if tbl == "contact.tbl":
+            for i in range(1,5):
+                if os.path.isfile("contact{}.tbl".format(i)):
+                    tbl_list["contact{}.tbl".format(i)] = count_lines("contact{}.tbl".format(i))
+        else:
+            if os.path.isfile(tbl):
+                tbl_list[tbl] = count_lines(tbl)
 
     if debug:
         print(seq_fasta(fasta_file))
@@ -1072,8 +1077,12 @@ def build_models(stage, fasta_file, fasta2_file, ss_file, contwt, sswt, mcount, 
     write_cns_customized_modules(sswt)
     write_cns_dgsa_file(contwt, sswt, mcount, mode, rep1, rep2,
                         mini, f_id, atomselect)
-    for tbl in ["contact1.tbl", "contact2.tbl", "contact3.tbl", "contact4.tbl", "ssnoe.tbl", "hbond.tbl", "dihedral.tbl"]:
-        if tbl not in tbl_list:
+    for tbl in ["contact.tbl", "ssnoe.tbl", "hbond.tbl", "dihedral.tbl"]:
+        if tbl == "contact.tbl":
+            for i in range(1,5):
+                if "contact{}.tbl".format(i) not in tbl_list:
+                    subprocess.call("sed -i s/{}//g dgsa.inp".format(tbl), shell=True)
+        elif tbl not in tbl_list:
             subprocess.call("sed -i s/{}//g dgsa.inp".format(tbl), shell=True)
     job_file = "#!/bin/bash\n"
     job_file += "echo \"starting cns...\"\n"
@@ -1431,9 +1440,14 @@ def assess_dgsa(stage, fasta_file, ss_file, dir_out, mcount, f_id, num_top_model
                "generated in {}! Try a different atom selection scheme")
               .format(mcount, stage))
     tbl_list = {}
-    for tbl in ["contact1.tbl", "contact2.tbl","contact3.tbl","contact4.tbl", "ssnoe.tbl", "hbond.tbl", "dihedral.tbl"]:
-        if os.path.isfile(tbl):
-            tbl_list[tbl] = count_lines(tbl)
+    for tbl in ["contact.tbl", "ssnoe.tbl", "hbond.tbl", "dihedral.tbl"]:
+        if tbl == "contact.tbl":
+            for i in range(1,5):
+                if os.path.isfile("contact{}.tbl".format(i)):
+                    tbl_list["contact{}.tbl".format(i)] = count_lines("contact{}.tbl".format(i))
+        else:
+            if os.path.isfile(tbl):
+                tbl_list[tbl] = count_lines(tbl)
 
     for tbl in sorted(tbl_list.keys()):
         if tbl == "dihedral.tbl":
@@ -1457,7 +1471,18 @@ def assess_dgsa(stage, fasta_file, ss_file, dir_out, mcount, f_id, num_top_model
         # print(C[len(C)-2])
         count = int(C[len(C)-2])
 
-        if count != count_lines(tbl):
+        tbl_count = 0
+        if tbl == "contact1.tbl":
+            for i in range(1,5):
+                if "contact{}.tbl".format(i) in tbl_list.keys():
+                    tbl_count += tbl_list[tbl]
+        elif tbl.startswith("contact"):
+            continue
+        else:
+            tbl_count = tbl_list[tbl]
+
+
+        if count != tbl_count:
             subprocess.call("touch assess.failed", shell=True)
             print("CNS did not accept all restraints of {}".format(tbl))
             print("Something went wrong, only {}/{} accepted".format(count, count_lines(tbl)))
