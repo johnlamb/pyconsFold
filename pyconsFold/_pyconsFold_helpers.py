@@ -582,8 +582,8 @@ def rr2tbl(rr_file, tbl_file, rrtype, dir_out, dist):
     r1a1r2a2 = rr2r1a1r2a2(rr_file, rrtype, dir_out)
     if os.path.isfile(tbl_file):
         os.remove(tbl_file)
-    to_print = []
-    # to_print = ["NOE\n class noe\n nrestraints=10000000"]
+    # to_print = []
+    to_print = ["nrestraints={}".format(len(r1a1r2a2) + 1)]
     for key, value in sorted(r1a1r2a2.items(), key=lambda i: i[1][1], reverse=True):
         # print(key, "=>", r1a1r2a2[key])
         C = key.split()
@@ -607,12 +607,7 @@ def rr2tbl(rr_file, tbl_file, rrtype, dir_out, dist):
                         "{:.2f}".format(posdev))
     # to_print.append("END")
     ##### Print less than 20000 to each table file, CNS restriction, up to four files work right now ####
-    if len(to_print) > 19500:
-        for i in range(1,(len(to_print)//19500) + 2):
-            tbl_file.format(i)
-            print2file(tbl_file.format(i), '\n'.join(to_print[(i-1)*19500:i*19500]) + '\n')
-    else:
-        print2file(tbl_file.format(1), '\n'.join(to_print) + '\n')
+    print2file(tbl_file, '\n'.join(to_print) + '\n')
 
 
 def contact_restraints(stage, selectrr, rrtype, dir_out, dist, rr_file=None):
@@ -635,7 +630,7 @@ def contact_restraints(stage, selectrr, rrtype, dir_out, dist, rr_file=None):
         # subprocess.call("mv temp.rr {}".format(rr_file), shell=True)
         os.remove(rr_file)
         print2file(rr_file, ''.join(rr_data))
-        rr2tbl(rr_file, "contact{}.tbl", rrtype, dir_out, dist)
+        rr2tbl(rr_file, "contact.tbl", rrtype, dir_out, dist)
 
 
 def angle_restraints(omega_file, use_omega, theta_file, use_theta, residues, seq_sep=1):
@@ -912,6 +907,8 @@ def count_lines(input_file):
             if len(w_line) < 1:
                 continue
             lines += 1
+    if input_file.endswith("contact.tbl"):
+        lines -= 1
     return lines
 
 
@@ -1051,15 +1048,9 @@ def build_models(stage, fasta_file, fasta2_file, ss_file, contwt, sswt, mcount, 
                  rep1, rep2, mini, f_id, atomselect, dir_out, cns_suite, debug):
     tbl_list = {}
     for tbl in ["contact.tbl", "ssnoe.tbl", "hbond.tbl", "dihedral.tbl"]:
-        if tbl == "contact.tbl":
-            for i in range(1,5):
-                if os.path.isfile("contact{}.tbl".format(i)):
-                    tbl_list["contact{}.tbl".format(i)] = count_lines("contact{}.tbl".format(i))
-        else:
-            if os.path.isfile(tbl):
-                tbl_list[tbl] = count_lines(tbl)
+        if os.path.isfile(tbl):
+            tbl_list[tbl] = count_lines(tbl)
 
-    print(tbl_list)
     if debug:
         print(seq_fasta(fasta_file))
         if len(fasta2_file)>0:
@@ -1080,11 +1071,7 @@ def build_models(stage, fasta_file, fasta2_file, ss_file, contwt, sswt, mcount, 
     write_cns_dgsa_file(contwt, sswt, mcount, mode, rep1, rep2,
                         mini, f_id, atomselect)
     for tbl in ["contact.tbl", "ssnoe.tbl", "hbond.tbl", "dihedral.tbl"]:
-        if tbl == "contact.tbl":
-            for i in range(1,5):
-                if "contact{}.tbl".format(i) not in tbl_list:
-                    subprocess.call("sed -i s/{}//g dgsa.inp".format("contact{}.tbl".format(i)), shell=True)
-        elif tbl not in tbl_list:
+        if tbl not in tbl_list:
             subprocess.call("sed -i s/{}//g dgsa.inp".format(tbl), shell=True)
     job_file = "#!/bin/bash\n"
     job_file += "echo \"starting cns...\"\n"
@@ -1443,13 +1430,8 @@ def assess_dgsa(stage, fasta_file, ss_file, dir_out, mcount, f_id, num_top_model
               .format(mcount, stage))
     tbl_list = {}
     for tbl in ["contact.tbl", "ssnoe.tbl", "hbond.tbl", "dihedral.tbl"]:
-        if tbl == "contact.tbl":
-            for i in range(1,5):
-                if os.path.isfile("contact{}.tbl".format(i)):
-                    tbl_list["contact{}.tbl".format(i)] = count_lines("contact{}.tbl".format(i))
-        else:
-            if os.path.isfile(tbl):
-                tbl_list[tbl] = count_lines(tbl)
+        if os.path.isfile(tbl):
+            tbl_list[tbl] = count_lines(tbl)
 
     for tbl in sorted(tbl_list.keys()):
         if tbl == "dihedral.tbl":
@@ -1473,18 +1455,7 @@ def assess_dgsa(stage, fasta_file, ss_file, dir_out, mcount, f_id, num_top_model
         # print(C[len(C)-2])
         count = int(C[len(C)-2])
 
-        tbl_count = 0
-        if tbl == "contact1.tbl":
-            for i in range(1,5):
-                if "contact{}.tbl".format(i) in tbl_list.keys():
-                    tbl_count += tbl_list[tbl]
-        elif tbl.startswith("contact"):
-            continue
-        else:
-            tbl_count = tbl_list[tbl]
-
-
-        if count != tbl_count:
+        if count != tbl_list[tbl]:
             subprocess.call("touch assess.failed", shell=True)
             print("CNS did not accept all restraints of {}".format(tbl))
             print("Something went wrong, only {}/{} accepted".format(count, count_lines(tbl)))
