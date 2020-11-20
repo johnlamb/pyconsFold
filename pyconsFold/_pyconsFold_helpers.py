@@ -1548,9 +1548,9 @@ def assess_dgsa(stage, fasta_file, ss_file, dir_out, mcount, f_id, num_top_model
         shutil.copy(pdb, os.path.join(dir_out, "{}_model{}.pdb".format(f_id, i)))
         shutil.move(pdb, "{}_model{}.pdb".format(f_id, i))
         print2file(os.path.join(dir_out, "{}_model{}.noe".format(f_id, i)), "{}".format(noe_energy))
-        i += 1
         # if i > mcount:
         return_array.append(["{}_model{}.noe".format(f_id, i), noe_energy])
+        i += 1
         if i > num_top_models:   # Only move the top models
             break
     return return_array
