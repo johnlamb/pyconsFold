@@ -214,7 +214,7 @@ $a_select
 {* restraint set 3 file *}
 {===>} nmr.noe.file.3="contact3.tbl";
 {* restraint set 4 file *}
-{===>} nmr.noe.file.4="contact3.tbl";
+{===>} nmr.noe.file.4="contact4.tbl";
 {* restraint set 5 file *}
 {===>} nmr.noe.file.5="ssnoe.tbl";
 {* NOE averaging modes *}

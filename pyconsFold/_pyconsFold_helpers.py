@@ -606,6 +606,7 @@ def rr2tbl(rr_file, tbl_file, rrtype, dir_out, dist):
                         "{:.2f} {:.2f} ".format(distance, negdev) +
                         "{:.2f}".format(posdev))
     # to_print.append("END")
+    ##### Print less than 20000 to each table file, CNS restriction, up to four files work right now ####
     if len(to_print) > 19500:
         for i in range(1,(len(to_print)//19500) + 2):
             tbl_file.format(i)
@@ -1058,6 +1059,7 @@ def build_models(stage, fasta_file, fasta2_file, ss_file, contwt, sswt, mcount, 
             if os.path.isfile(tbl):
                 tbl_list[tbl] = count_lines(tbl)
 
+    print(tbl_list)
     if debug:
         print(seq_fasta(fasta_file))
         if len(fasta2_file)>0:
@@ -1081,7 +1083,7 @@ def build_models(stage, fasta_file, fasta2_file, ss_file, contwt, sswt, mcount, 
         if tbl == "contact.tbl":
             for i in range(1,5):
                 if "contact{}.tbl".format(i) not in tbl_list:
-                    subprocess.call("sed -i s/{}//g dgsa.inp".format(tbl), shell=True)
+                    subprocess.call("sed -i s/{}//g dgsa.inp".format("contact{}.tbl".format(i)), shell=True)
         elif tbl not in tbl_list:
             subprocess.call("sed -i s/{}//g dgsa.inp".format(tbl), shell=True)
     job_file = "#!/bin/bash\n"
