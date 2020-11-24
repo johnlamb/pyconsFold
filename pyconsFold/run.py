@@ -26,7 +26,7 @@ raw_cns_suite = os.environ["CNS_SOLVE"]
 raw_cns_executable = raw_cns_suite + "/intel-x86_64bit-linux/bin/cns_solve"
 ########################################################################
 ### Check so that DSSP and CNS is accessable ###
-program_dssp, program_pcons, program_tmscore, cns_suite, cns_executable = check_programs(raw_program_dssp, raw_program_pcons, raw_program_tscore, raw_cns_suite, raw_cns_executable)
+program_dssp, program_pcons, program_tmscore, cns_suite, cns_executable = check_programs(raw_program_dssp, raw_program_pcons, raw_program_tmscore, raw_cns_suite, raw_cns_executable)
 
 ATOMTYPE = {"CA": 1, "N": 1, "C": 1, "O": 1}
 SHIFT = {"0": 1, "+1": 1, "-1": 1}
