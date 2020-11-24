@@ -109,7 +109,7 @@ def seq_rr(rr_file, dir_out):
 def print2file(write_file, text, newline='\n'):
     if os.path.isfile(write_file):
         with open(write_file, 'a+') as write_handle:
-            write_handle.write(text)
+            write_handle.write('\n' + text)
     else:
         with open(write_file, 'w') as write_handle:
             write_handle.write(text)

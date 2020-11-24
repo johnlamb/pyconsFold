@@ -128,6 +128,22 @@ def _model(fasta, out_dir, rr='', npz='', fasta2='', dist=False, rr_pthres=0.55,
         if ss_file:
             sec_restraints(stage, ss_file, res_dihe, res_hbnd, res_dist,
                            res_strnd_OO, residues, ATOMTYPE, SHIFT, debug)
+            ### Update the contact.tbl file with new number of restraints
+            extra_restraints = 0
+            for tbl in ["hbond.tbl", "dihedral.tbl", "ssnoe.tbl"]:
+                if os.path.isfile(tbl):
+                    with open(tbl,'r') as tbl_handle:
+                        num = len(tbl_handle.read().split('\n'))
+                        extra_restraints += num
+            contact_to_write = ''
+            with open("contact.tbl", 'r') as contact_handle:
+                curr_restraints = int(contact_handle.readline().split('=')[1])
+                contact_to_write += 'nrestraints=' + str(extra_restraints + curr_restraints) + '\n'
+                for line in contact_handle:
+                    contact_to_write += line
+            os.remove("contact.tbl")
+            print2file("contact.tbl", contact_to_write)
+
         ### Use angles files ###
         use_omega = True if omega_file else False
         use_theta = True if theta_file else False
