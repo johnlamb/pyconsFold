@@ -1,0 +1,1 @@
+Zhang Y, Skolnick J. Scoring function for automated assessment of protein structure template quality. Proteins. 2004 Dec 1;57(4):702-10. doi: 10.1002/prot.20264. Erratum in: Proteins. 2007 Sep 1;68(4):1020. PMID: 15476259.

@@ -1,0 +1,45 @@
+*************************************************************************
+*     This program is to compare two protein structures and identify the 
+*     best superposition that has the highest TM-score. Input structures 
+*     must be in the PDB format. By default, TM-score is normalized by 
+*     the second protein. Users can obtain a brief instruction by simply
+*     running the program without arguments. For comments/suggestions,
+*     please contact email: zhng@umich.edu.
+*     
+*     Reference: 
+*     Yang Zhang, Jeffrey Skolnick, Proteins, 2004 57:702-10.
+*     
+*     Permission to use, copy, modify, and distribute this program for 
+*     any purpose, with or without fee, is hereby granted, provided that
+*     the notices on the head, the reference information, and this
+*     copyright notice appear in all copies or substantial portions of 
+*     the Software. It is provided "as is" without express or implied 
+*     warranty.
+******************* Updating history ************************************
+*     2005/10/19: the program was reformed so that the score values.
+*                 are not dependent on the specific compilers.
+*     2006/06/20: selected 'A' if there is altLoc when reading PDB file.
+*     2007/02/05: fixed a bug with length<15 in TMscore_32.
+*     2007/02/27: rotation matrix from Chain-1 to Chain-2 was added.
+*     2007/12/06: GDT-HA score was added, fixed a bug for reading PDB.
+*     2010/08/02: A new RMSD matrix was used and obsolete statement removed.
+*     2011/01/03: The length of pdb file names were extended to 500.
+*     2011/01/30: An open source license is attached to the program.
+*     2012/05/07: Improved RMSD calculation subroutine which speeds up 
+*                 TM-score program by 30%.
+*     2012/06/05: Added option '-l L' which calculates TM-score (and maxsub
+*                 and GDT scores) normalized by a specific length 'L'.
+*     2012/12/17: Added 'TM.sup_atm' to superpose full-atom structures.
+*                 The former superposition is for CA-trace only.
+*     2013/05/08: Update TM-score so that it can read all alternate location
+*                 indicators and residue insertions.
+*     2013/05/11: Fix a bug in array overflow.
+*     2016/03/23: Extended the program to allow calculating TM-score for for 
+*                 complex structure comparisons, where multiple-chains are
+*                 merged into a single chain. Chain ID is now included in
+*                 the output files.
+*     2019/07/08: Enabled TM-score to support both PDB and mmCIF formats,
+*                 and updated structure reading which makes program faster.
+*     2019/08/18: Fixed multiple bugs associated with mmCIF formats.
+*     2019/08/22: added output scripts for pymol, C++ version was included.
+*************************************************************************

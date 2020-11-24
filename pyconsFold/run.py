@@ -19,12 +19,14 @@ raw_program_dssp = os.path.join(os.path.dirname(os.path.realpath(__file__)),\
                             "dssp/dssp-2.0.4-linux-amd64")
 raw_program_pcons = os.path.join(os.path.dirname(os.path.realpath(__file__)),\
                             "pcons/pcons")
+raw_program_tmscore = os.path.join(os.path.dirname(os.path.realpath(__file__)),\
+                            "TMscore/TMscore")
 ########## CNS from env variable #######################################
 raw_cns_suite = os.environ["CNS_SOLVE"]
 raw_cns_executable = raw_cns_suite + "/intel-x86_64bit-linux/bin/cns_solve"
 ########################################################################
 ### Check so that DSSP and CNS is accessable ###
-program_dssp, program_pcons, cns_suite, cns_executable = check_programs(raw_program_dssp, raw_program_pcons, raw_cns_suite, raw_cns_executable)
+program_dssp, program_pcons, program_tmscore, cns_suite, cns_executable = check_programs(raw_program_dssp, raw_program_pcons, raw_program_tscore, raw_cns_suite, raw_cns_executable)
 
 ATOMTYPE = {"CA": 1, "N": 1, "C": 1, "O": 1}
 SHIFT = {"0": 1, "+1": 1, "-1": 1}
@@ -34,11 +36,6 @@ def _initialize(fasta, out_dir, dist, rr='', npz='', fasta2='', ss='', rrtype='c
                       lbd=0.4, contwt=10, sswt=5, rep2=0.85, rr_pthres=0.0, rr_sep=5, rep1=1, atomselect=2, mode='trial',debug=False, bin_values={},tmscore_pdb_file=False):
 
     #### If we should use tmscore to compare to native structure, make sure it is installed and accessable ###
-    if tmscore_pdb_file:
-        if not shutil.which("TMscore"):
-            print("ERROR! You can only compare the models against a native structure if you have TMscore installed")
-            print("Please install TMscore to use")
-            sys.exit()
     base_dir = os.getcwd()
     dir_out = os.path.join(base_dir, out_dir)
 

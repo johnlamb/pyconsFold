@@ -22,7 +22,7 @@ CBATOM = {"A": "cb", "N": "cb", "C": "cb", "Q": "cb", "H": "cb", "L": "cb",
           "W": "cb", "V": "cb"}
 
 
-def check_programs(program_dssp, program_pcons, cns_suite, cns_executable):
+def check_programs(program_dssp, program_pcons, program_tmscore, cns_suite, cns_executable):
         if shutil.which("dssp"):
             program_dssp = shutil.which("dssp")
         elif not os.path.isfile(program_dssp):
@@ -32,9 +32,18 @@ def check_programs(program_dssp, program_pcons, cns_suite, cns_executable):
 
         if shutil.which("pcons"):
             program_dssp = shutil.which("pcons")
-        if not os.path.isfile(program_pcons):
+        elif not os.path.isfile(program_pcons):
             print("ERROR! Can not find pcons program at " +
                   "{}".format(program_pcons))
+            sys.exit()
+
+        if shutil.which("TMscore"):
+            program_tmscore = shutil.which("pcons")
+        elif not os.path.isfile(program_tmscore):
+            print("ERROR! You can only compare the models against a native structure if you have TMscore installed")
+            print("ERROR! Can not find TMscore program at " +
+                  "{}".format(program_TMscore))
+            print("Please install TMscore to use")
             sys.exit()
 
         if not os.path.isdir(cns_suite):
