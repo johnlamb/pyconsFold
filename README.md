@@ -3,16 +3,15 @@ A python modelling framework built on top of CNS.
 Support for both trRosetta distance predictions and CASP format contact predictions, both binary and distance based.
 
 ## Install
-pyconsFold require a working installation of [CNS][http://cns-online.org]. This needs to be done manually due to license.
+pyconsFold require a working installation of [CNS](http://cns-online.org). This needs to be done manually due to license.
 
 1. Install CNS
-	1. [Request][http://cns-online.org/cns_request/] a download link from CNS.
+	1. [Request](http://cns-online.org/cns_request/) a download link from CNS.
 	2. Follow the emailed instructions to download "cns_solve_1.3_all_intel-mac_linux.tar.gz
 	3. Extract the files `tar xzvf cns_solve_1.3_all_intel-mac_linux.tar.gz`
 	4. Change into the resulting directory `cd cns_solve_1.3`
 	5. Unhide the bash-specific file `mv .cns_solve_env_sh cns_solve_env.sh`
-	6. In this resulting file, replace '_CNSsolve_location_' with the CNS installation folder:
-	   If you extracted the file in your homefolder then the CNS installation would be: `/home/<your username>/cns_solve_1.3`
+	6. In this resulting file, replace `_CNSsolve_location_` with the CNS installation folder. If you extracted the file in your homefolder then the CNS installation would be: `/home/<your username>/cns_solve_1.3`
 2. Install pyconsFold
 	1. Run `pip install pyconsFold`
 
