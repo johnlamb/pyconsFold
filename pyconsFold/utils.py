@@ -25,18 +25,18 @@ def npz_to_casp(input_file, info=["all"], fasta_file=None,  fasta2_file=None, ou
     bin_values    -- Named tuple of dictionary of bin values for the different infos, see below for defaults
 
     Bin value defaults:
-    bin_values = namedtuple("bin_values", ["bin_step", "min_bin_value", "max_bin_value", "ending"])
-    default_bin_values = {"dist":  bin_values(0.5, 2, 16, ".rr"),    # in angstrom
-                      "omega": bin_values(15, -180, 180, ".omega"),  # dihedral angle in degrees
-                      "theta": bin_values(15, -180, 180, ".theta"),  # dihedral angle in degrees
-                      "phi":   bin_values(15,    0, 180, ".phi")}    # planar angle in degrees
+    Bin_values = namedtuple("Bin_values", ["bin_step", "min_bin_value", "max_bin_value", "ending"])
+    default_bin_values = {"dist":  Bin_values(0.5, 2, 16, ".rr"),    # in angstrom
+                      "omega": Bin_values(15, -180, 180, ".omega"),  # dihedral angle in degrees
+                      "theta": Bin_values(15, -180, 180, ".theta"),  # dihedral angle in degrees
+                      "phi":   Bin_values(15,    0, 180, ".phi")}    # planar angle in degrees
     """
 
-    Bin_values = namedtuple("bin_values", ["bin_step", "min_bin_value", "max_bin_value", "ending"])
-    default_bin_values = {"dist":  bin_values(0.5, 2, 16, ".rr"),    # in angstrom
-                      "omega": bin_values(15, -180, 180, ".omega"),  # dihedral angle in degrees
-                      "theta": bin_values(15, -180, 180, ".theta"),  # dihedral angle in degrees
-                      "phi":   bin_values(15,    0, 180, ".phi")}    # planar angle in degrees
+    Bin_values = namedtuple("Bin_values", ["bin_step", "min_bin_value", "max_bin_value", "ending"])
+    default_bin_values = {"dist":  Bin_values(0.5, 2, 16, ".rr"),    # in angstrom
+                      "omega": Bin_values(15, -180, 180, ".omega"),  # dihedral angle in degrees
+                      "theta": Bin_values(15, -180, 180, ".theta"),  # dihedral angle in degrees
+                      "phi":   Bin_values(15,    0, 180, ".phi")}    # planar angle in degrees
 
     ### Has the user supplied their own bin values?
     if bin_values:
