@@ -6,6 +6,7 @@ import numpy as np
 import scipy.stats as st
 from collections import namedtuple
 import sys
+import os
 
 
 def npz_to_casp(input_file, info=["all"], fasta_file=None,  fasta2_file=None, out_base_path="",
@@ -170,7 +171,7 @@ def npz_to_casp(input_file, info=["all"], fasta_file=None,  fasta2_file=None, ou
             content.append(line.format(i=i, j=j, m=m, c=c, sd=sd))
         content.append("END\n")
         if out_base_path:
-            out_file = out_base_path + bin_values.ending
+            out_file = os.path.join(out_base_path, input_file[:-4] + bin_values.ending)
         else:
             out_file = input_file[:-4] + bin_values.ending
         with open(out_file, 'w') as contacts_handle:
