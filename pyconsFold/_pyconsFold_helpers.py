@@ -8,6 +8,7 @@ import glob
 import re
 import shutil
 import subprocess
+import tempfile
 from .utils import npz_to_casp
 
 AA3TO1 = {"ALA": "A", "ASN": "N", "CYS": "C", "GLN": "Q", "HIS": "H",
@@ -291,16 +292,16 @@ def process_arguments(fasta, contacts, dir_out, ss, rrtype, selectrr, fasta2, om
 
     ### Optional files ###
     if npz:
-        os.makedirs("npz_tmp")
+        npz_dir = tempfile.mkdtemp()
         if fasta2:
-            npz_to_casp(contacts, fasta_file=fasta, fasta2_file=fasta2, out_base_path="npz_tmp")
+            npz_to_casp(contacts, fasta_file=fasta, fasta2_file=fasta2, out_base_path=npz_dir)
         else:
-            npz_to_casp(contacts, fasta_file=fasta, out_base_path="npz_tmp")
-        contacts_file = os.path.join("npz_tmp", contacts[:-4] + '.rr')
+            npz_to_casp(contacts, fasta_file=fasta, out_base_path=npz_dir)
+        contacts_file = os.path.join(npz_dir, os.path.basename(contacts[:-4]) + '.rr')
         if use_angles:
-            omega = os.path.join("npz_tmp", contacts[:-4] + '.omega')
-            theta = os.path.join("npz_tmp", contacts[:-4] + '.theta')
-            phi = os.path.join("npz_tmp", contacts[:-4] + '.phi')
+            omega = os.path.join(npz_dir, os.path.basename(contacts[:-4]) + '.omega')
+            theta = os.path.join(npz_dir, os.path.basename(contacts[:-4]) + '.theta')
+            phi = os.path.join(npz_dir, os.path.basename(contacts[:-4]) + '.phi')
     else:
         contacts_file = contacts
     if fasta2:
@@ -332,7 +333,7 @@ def process_arguments(fasta, contacts, dir_out, ss, rrtype, selectrr, fasta2, om
     if theta:
         shutil.copy(theta, dir_out + "/input/" + theta_file)
     if npz:
-        shutil.rmtree("npz_tmp")
+        shutil.rmtree(npz_dir)
 
     ### Move into the input directory ###
     # base_dir = os.path.dirname(os.path.realpath(__file__))

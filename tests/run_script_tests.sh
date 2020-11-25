@@ -4,7 +4,7 @@ test_folder=`dirname "$0"`"/data/"
 base_test_folder=`dirname "$0"`"/../examples/"
 
 # Test normal modelling
-${base_test_folder}run_model.py ${test_folder}short.fasta ${test_folder}short.rr script_test_out -ss ${test_folder}short.ss
+${base_test_folder}run_model.py ${test_folder}short.fasta ${test_folder}short.rr script_test_out/model -ss ${test_folder}short.ss
 
 # Test distance modelling
 ${base_test_folder}run_model_dist.py ${test_folder}2HIUA.fasta ${test_folder}2HIUA.rr script_test_out/model_dist

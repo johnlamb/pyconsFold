@@ -170,8 +170,8 @@ def npz_to_casp(input_file, info=["all"], fasta_file=None,  fasta2_file=None, ou
         for i, j, m, c, sd in data:
             content.append(line.format(i=i, j=j, m=m, c=c, sd=sd))
         content.append("END\n")
-        if out_base_path:
-            out_file = os.path.join(out_base_path, input_file[:-4] + bin_values.ending)
+        if len(out_base_path) > 0:
+            out_file = os.path.join(out_base_path, os.path.basename(input_file[:-4]) + bin_values.ending)
         else:
             out_file = input_file[:-4] + bin_values.ending
         with open(out_file, 'w') as contacts_handle:
