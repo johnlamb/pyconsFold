@@ -33,17 +33,17 @@ def npz_to_casp(input_file, info=["all"], fasta_file=None,  fasta2_file=None, ou
     """
 
     Bin_values = namedtuple("Bin_values", ["bin_step", "min_bin_value", "max_bin_value", "ending"])
-    default_bin_values = {"dist":  Bin_values(0.5, 2, 16, ".rr"),    # in angstrom
-                      "omega": Bin_values(15, -180, 180, ".omega"),  # dihedral angle in degrees
-                      "theta": Bin_values(15, -180, 180, ".theta"),  # dihedral angle in degrees
-                      "phi":   Bin_values(15,    0, 180, ".phi")}    # planar angle in degrees
+    default_bin_values = {"dist":  Bin_values(0.5, 2, 16, ".rr"),    # In Angstrom
+                      "omega": Bin_values(15, -180, 180, ".omega"),  # Dihedral angle in degrees
+                      "theta": Bin_values(15, -180, 180, ".theta"),  # Dihedral angle in degrees
+                      "phi":   Bin_values(15,    0, 180, ".phi")}    # Planar angle in degrees
 
     ### Has the user supplied their own bin values?
     if bin_values:
         for key in bin_values.keys():
             if key in default_bin_values:
                 default_bin_values[key] = Bin_values(*bin_values[key])
-    if 'all' in info_keys:
+    if 'all' in info:
         info_keys = ['dist', 'omega', 'theta', 'phi']
     else:
         info_keys = info
@@ -196,16 +196,8 @@ def _virtual_cb_vector(residue):
 
 
 def pdb_to_npz(npz_name, pdb_file=False, mmCIF_file=False, std=1):
-    """Converts a structure (pdb/mmCif) into a corresponding trRosetta npz-file
-
-    Positional arguments:
-    npz_name    -- Output name of npz-file
-
-    Keyword arguments:
-    ### Either pdb or mmCIF must be supplied ###
-    pdb_file      -- Input pdb structure
-    mmCIF_file    -- Input mmCIF structure
-    std           -- How many Ångströms is one standard deviation? (default 1)
+    """
+    Convert a pdb/mcif to trRosetta distances/angles
     """
 
     if pdb_file:
