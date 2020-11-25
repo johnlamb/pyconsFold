@@ -16,7 +16,7 @@ parser.add_argument("-L", "--L", default=0.55, type=float, help="Cutoff for cont
 args = parser.parse_args()
 
 ########## Only uncomment ONE of these lines
-# pyconsFold.model(args.fa_file, args.out_dir, rr=args.rr_file, ss=args.ss,save_step=True, rr_pthres=args.L, rr_sep=0)
-# pyconsFold.model_dist(args.fa_file, args.out_dir, rr=args.rr_file)
-pyconsFold.model_dock(args.fa_file, args.fa2, args.out_dir, rr=args.rr_file)
+pyconsFold.model(args.fa_file, args.rr_file, args.out_dir, ss=args.ss, rr_pthres=args.L)
+# pyconsFold.model_dist(args.fa_file, args.rr_file, args.out_dir, rr_pthres=args.L)
+# pyconsFold.model_dock(args.fa_file, args.fa2, args.out_dir, rr=args.rr_file, rr_pthres=args.L)
 
