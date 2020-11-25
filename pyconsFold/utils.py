@@ -8,7 +8,7 @@ from collections import namedtuple
 import sys
 
 
-def npz_to_casp(input_file, info="all", fasta_file=None,  fasta2_file=None, out_base_path="",
+def npz_to_casp(input_file, info=["all"], fasta_file=None,  fasta2_file=None, out_base_path="",
         min_sep=0, pthres=0.15, bin_values={}):
     """Converts trRosetta distance and contacts file into CASP formated files
 
@@ -16,7 +16,7 @@ def npz_to_casp(input_file, info="all", fasta_file=None,  fasta2_file=None, out_
     input_file    -- Input npz file
 
     Keyword arguments:
-    info          -- What info to extract? One of ['all', 'dist', 'omega', 'theta', 'phi']
+    info          -- What info to extract? A list of one or more of ['all']/['dist', 'omega', 'theta', 'phi']
     fasta_file    -- Fasta file to fill sequence information for the header 
     fasta2_file   -- Support for dual files in case of docking in pyconsFold
     out_base_path -- Output directory if other than current directory
@@ -32,19 +32,21 @@ def npz_to_casp(input_file, info="all", fasta_file=None,  fasta2_file=None, out_
                       "phi":   bin_values(15,    0, 180, ".phi")}    # planar angle in degrees
     """
 
-    bin_values = namedtuple("bin_values", ["bin_step", "min_bin_value", "max_bin_value", "ending"])
+    Bin_values = namedtuple("bin_values", ["bin_step", "min_bin_value", "max_bin_value", "ending"])
     default_bin_values = {"dist":  bin_values(0.5, 2, 16, ".rr"),    # in angstrom
                       "omega": bin_values(15, -180, 180, ".omega"),  # dihedral angle in degrees
                       "theta": bin_values(15, -180, 180, ".theta"),  # dihedral angle in degrees
                       "phi":   bin_values(15,    0, 180, ".phi")}    # planar angle in degrees
+
+    ### Has the user supplied their own bin values?
     if bin_values:
         for key in bin_values.keys():
             if key in default_bin_values:
                 default_bin_values[key] = Bin_values(*bin_values[key])
-    if info.lower() == 'all':
+    if 'all' in info_keys:
         info_keys = ['dist', 'omega', 'theta', 'phi']
     else:
-        info_keys = [info]
+        info_keys = info
 
 
     for info_key in info_keys:
@@ -53,6 +55,7 @@ def npz_to_casp(input_file, info="all", fasta_file=None,  fasta2_file=None, out_
                 raw_data = npz_file[info_key]
         except:
             print("Error reading npz file: " + input_file)
+            print("Is file and info key {} correct?".format(info_key))
             sys.exit()
         target = '.'.join(input_file.split('/')[-1].split('.')[:-1])
 
