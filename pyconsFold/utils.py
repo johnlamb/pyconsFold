@@ -10,15 +10,33 @@ import sys
 
 def npz_to_casp(input_file, info="all", fasta_file=None,  fasta2_file=None, out_base_path="",
         min_sep=0, pthres=0.15, bin_values={}):
-    """
-    Convert a trRosetta npz-file into casp formated restraints file.
+    """Converts trRosetta distance and contacts file into CASP formated files
+
+    Positional arguments:
+    input_file    -- Input npz file
+
+    Keyword arguments:
+    info          -- What info to extract? One of ['all', 'dist', 'omega', 'theta', 'phi']
+    fasta_file    -- Fasta file to fill sequence information for the header 
+    fasta2_file   -- Support for dual files in case of docking in pyconsFold
+    out_base_path -- Output directory if other than current directory
+    min_sep       -- Minimum separation between contacts
+    pthres        -- Only extract contacts with a probability above this threshold
+    bin_values    -- Named tuple of dictionary of bin values for the different infos, see below for defaults
+
+    Bin value defaults:
+    bin_values = namedtuple("bin_values", ["bin_step", "min_bin_value", "max_bin_value", "ending"])
+    default_bin_values = {"dist":  bin_values(0.5, 2, 16, ".rr"),    # in angstrom
+                      "omega": bin_values(15, -180, 180, ".omega"),  # dihedral angle in degrees
+                      "theta": bin_values(15, -180, 180, ".theta"),  # dihedral angle in degrees
+                      "phi":   bin_values(15,    0, 180, ".phi")}    # planar angle in degrees
     """
 
-    Bin_values = namedtuple("Bin_values", ["bin_step", "min_bin_value", "max_bin_value", "ending"])
-    default_bin_values = {"dist":  Bin_values(0.5, 2, 16, ".rr"),     # In Angstrom
-                      "omega": Bin_values(15, -180, 180, ".omega"),  # Dihedral angle in degrees
-                      "theta": Bin_values(15, -180, 180, ".theta"),  # Dihedral angle in degrees
-                      "phi":   Bin_values(15,    0, 180, ".phi")}  # Planar angle in degrees
+    bin_values = namedtuple("bin_values", ["bin_step", "min_bin_value", "max_bin_value", "ending"])
+    default_bin_values = {"dist":  bin_values(0.5, 2, 16, ".rr"),    # in angstrom
+                      "omega": bin_values(15, -180, 180, ".omega"),  # dihedral angle in degrees
+                      "theta": bin_values(15, -180, 180, ".theta"),  # dihedral angle in degrees
+                      "phi":   bin_values(15,    0, 180, ".phi")}    # planar angle in degrees
     if bin_values:
         for key in bin_values.keys():
             if key in default_bin_values:
@@ -175,8 +193,16 @@ def _virtual_cb_vector(residue):
 
 
 def pdb_to_npz(npz_name, pdb_file=False, mmCIF_file=False, std=1):
-    """
-    Convert a pdb/mcif to trRosetta distances/angles
+    """Converts a structure (pdb/mmCif) into a corresponding trRosetta npz-file
+
+    Positional arguments:
+    npz_name    -- Output name of npz-file
+
+    Keyword arguments:
+    ### Either pdb or mmCIF must be supplied ###
+    pdb_file      -- Input pdb structure
+    mmCIF_file    -- Input mmCIF structure
+    std           -- How many Ångströms is one standard deviation? (default 1)
     """
 
     if pdb_file:

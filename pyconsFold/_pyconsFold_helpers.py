@@ -66,7 +66,7 @@ def check_programs(program_dssp, program_pcons, program_tmscore, cns_suite, cns_
                   "{}/libraries/toppar/!".format(cns_executable))
             print("Check CNS installation!")
             sys.exit()
-        return program_dssp, program_pcons, cns_suite, cns_executable
+        return program_dssp, program_pcons, program_tmscore, cns_suite, cns_executable
 
 
 def seq_fasta(fasta_file):
@@ -193,22 +193,28 @@ def clean_output_dir(dir_out):
 
 
 # pair not implemented
-def process_arguments(fasta, rr, npz, dir_out, ss, rrtype, selectrr, fasta2, omega, theta, mcount,
-                      lbd, contwt, sswt, rep2, rr_pthres, rr_sep, debug):
+def process_arguments(fasta, contacts, dir_out, ss, rrtype, selectrr, fasta2, omega, theta, mcount,
+                      lbd, contwt, sswt, rep2, rr_pthres, rr_sep, use_angles, debug):
+    npz=False
+    rr=False
+    if contacts.lower().endswith(".npz"):
+        npz=True
+    elif contacts.lower().endswith(".rr"):
+        rr=True
     ### Check that all files exists ###
     if not os.path.isfile(fasta):
         print("ERROR! Fasta file {} does not exist!".format(fasta))
         sys.exit()
     if npz:
-        if not os.path.isfile(npz):
-            print("ERROR! Contact file {} does not exist!".format(npz))
+        if not os.path.isfile(contacts):
+            print("ERROR! Contact file {} does not exist!".format(contacts))
             sys.exit()
     elif rr:
-        if not os.path.isfile(rr):
-            print("ERROR! Contact file {} does not exist!".format(rr))
+        if not os.path.isfile(contacts):
+            print("ERROR! Contact file {} does not exist!".format(contacts))
             sys.exit()
     else:
-        print("ERROR! At least one contact file needs to be supplied, rr or npz!")
+        print("ERROR! At least one contacts file needs to be supplied with either .rr (CASP) or .npz (trRosetta) file-ending")
         sys.exit()
 
     if fasta2:
@@ -267,17 +273,17 @@ def process_arguments(fasta, rr, npz, dir_out, ss, rrtype, selectrr, fasta2, ome
     ### Prepare working directories, remove if exists ###
     dir_out = os.path.abspath(os.path.join(os.getcwd(), dir_out))
     if not os.path.isdir(dir_out):
-        os.mkdir(dir_out)
+        os.makedirs(dir_out)
     else:
         shutil.rmtree(dir_out)
-        os.mkdir(dir_out)
+        os.makedirs(dir_out)
     if os.path.isdir(dir_out + "/input"):
         shutil.rmtree(dir_out + "/input")
     if os.path.isdir(dir_out + "/stage1"):
         shutil.rmtree(dir_out + "/stage1")
     if os.path.isdir(dir_out + "/stage2"):
         shutil.rmtree(dir_out + "/stage2")
-    os.mkdir(dir_out + "/input")
+    os.makedirs(dir_out + "/input")
 
     ## Create filenames to standardize ###
     fasta_file = f_id + ".fasta"
@@ -286,13 +292,16 @@ def process_arguments(fasta, rr, npz, dir_out, ss, rrtype, selectrr, fasta2, ome
     ### Optional files ###
     if npz:
         if fasta2:
-            npz_to_casp(npz, fasta_file=fasta, fasta2_file=fasta2)
+            npz_to_casp(contacts, fasta_file=fasta, fasta2_file=fasta2)
         else:
-            npz_to_casp(npz, fasta_file=fasta)
-        rr = npz[:-4] + '.rr'
-        omega = npz[:-4] + '.omega'
-        theta = npz[:-4] + '.theta'
-        phi = npz[:-4] + '.phi'
+            npz_to_casp(contacts, fasta_file=fasta)
+        contacts_file = contacts[:-4] + '.rr'
+        if use_angles:
+            omega = contacts[:-4] + '.omega'
+            theta = contacts[:-4] + '.theta'
+            phi = contacts[:-4] + '.phi'
+    else:
+        contacts_file = contacts
     if fasta2:
         fasta2_file = f2_id + ".fasta"
     else:
@@ -312,7 +321,7 @@ def process_arguments(fasta, rr, npz, dir_out, ss, rrtype, selectrr, fasta2, ome
 
     ### Copy files into the input directory ###
     shutil.copy(fasta, dir_out + "/input/" + fasta_file)
-    shutil.copy(rr, dir_out + "/input/" + rr_file)
+    shutil.copy(contacts_file, dir_out + "/input/" + rr_file)
     if fasta2:
         shutil.copy(fasta2, dir_out + "/input/" + fasta2_file)
     if ss:
@@ -591,13 +600,18 @@ def rr2tbl(rr_file, tbl_file, rrtype, dir_out, dist):
     r1a1r2a2 = rr2r1a1r2a2(rr_file, rrtype, dir_out)
     if os.path.isfile(tbl_file):
         os.remove(tbl_file)
-    # to_print = []
     to_print = ["nrestraints={}".format(len(r1a1r2a2) + 1)]
     for key, value in sorted(r1a1r2a2.items(), key=lambda i: i[1][1], reverse=True):
         # print(key, "=>", r1a1r2a2[key])
         C = key.split()
         if dist:
-            negdev = posdev = value[2]
+            if len(value) == 2:
+                print("Warning! The contacts file lack a predicted error column,")
+                print("using default -0.10Å and dist - 3.60Å as errors")
+                negdev = 0.10
+                posdev = value[0] - 3.60
+            else:
+                negdev = posdev = value[2]
         else:
             negdev = 0.10
             # Assuming less than 8Å is a contact
@@ -606,16 +620,11 @@ def rr2tbl(rr_file, tbl_file, rrtype, dir_out, dist):
             distance = value[0]
         else:
             distance = 3.6
-        # distance = value  #[0]
-        # negdev = value[1]
-        # posdev = value[2]
         to_print.append("assign (resid {:>3} and ".format(C[0]) +
                         "name {:>2}) ".format(C[1]) +
                         "(resid {:>3} and name {:>2}) ".format(C[2], C[3]) +
                         "{:.2f} {:.2f} ".format(distance, negdev) +
                         "{:.2f}".format(posdev))
-    # to_print.append("END")
-    ##### Print less than 20000 to each table file, CNS restriction, up to four files work right now ####
     print2file(tbl_file, '\n'.join(to_print) + '\n')
 
 
@@ -1574,7 +1583,7 @@ def qa_pcons(dir_out, f_id, program_pcons, debug):
         if line.startswith(f_id):
             pdb_file, pcons_score = line.split()[:2]
             return_array.append([pdb_file, float(pcons_score)])
-    return return_array
+    return sorted(return_array, key=lambda x: x[1], reverse=True)
 
 
 def qa_tmscore(dir_out, native_struct, debug):
@@ -1588,19 +1597,5 @@ def qa_tmscore(dir_out, native_struct, debug):
         for line in tmscore_rows.split("\n"):
             if line.startswith("TM-score"):
                 tmscore = line.split()[2]
-                return_array.append([model.split('\n')[-1], float(tmscore)])
-    return return_array
-    # seq = seq_fasta(fasta_file)
-    # pdb_list = load_pdb(os.path.join(dir_out, stage))
-    # if len(pdb_list) < 2:
-    #     print(("ERROR! Something went wrong while running CNS in {}. Try a " +
-    #            "different atom selection scheme!").format(stage))
-    #     sys.exit()
-    # if len(pdb_list) < (mcount - 1):
-    #     print(("Warning!! There are some issues! {} models were not " +
-    #            "generated in {}! Try a different atom selection scheme")
-    #           .format(mcount, stage))
-    # tbl_list = {}
-    # for tbl in ["contact.tbl", "ssnoe.tbl", "hbond.tbl", "dihedral.tbl"]:
-    #     if os.path.isfile(tbl):
-    #         tbl_list[tbl] = count_lines(tbl)
+                return_array.append([model.split('/')[-1], float(tmscore)])
+    return sorted(return_array, key=lambda x: x[1], reverse=True)

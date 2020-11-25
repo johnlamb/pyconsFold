@@ -6,7 +6,7 @@ import argparse
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument("fa_file", type=str, help="input sequence file in FASTA format")
-parser.add_argument("rr_file", type=str, help="Contact file in CASP format, with or without error as last column")
+parser.add_argument("contact_file", type=str, help="Contact file in CASP or trRosetta npz format")
 parser.add_argument("out_dir", type=str, help="Output directory to write results")
 
 parser.add_argument("-fa2_file", "--fa2", type=str, help="input sequence file in FASTA format for the second sequence")
