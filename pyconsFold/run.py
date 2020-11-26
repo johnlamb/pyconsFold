@@ -17,7 +17,7 @@ import sys
 from ._pyconsFold_helpers import (assess_dgsa, build_extended, build_models,
                                  check_programs, clean_output_dir,
                                  contact_restraints, process_arguments,
-                                 sec_restraints, xyz_pdb, angle_restraints,
+                                 sec_restraints, update_nrestraints, xyz_pdb, angle_restraints,
                                  qa_pcons, qa_tmscore, print2file)
 from ._pyconsFold_libs import load_ss_restraints
 from ._arguments import get_args
@@ -96,7 +96,7 @@ def _gen_initial_model(fasta_file, residues, fasta2_file, debug):
             sys.exit()
 
 ### Main model function, all other is based on this ###
-def _model(fasta, contacts, out_dir, fasta2='', pcons=False, dist=False, rr_pthres=0.55, top_models=5, save_step=False, **kwargs):
+def _model(fasta, contacts, out_dir, fasta2='', pcons=False, dist=False, rr_pthres=0.00, top_models=5, save_step=False, stage2=False, **kwargs):
     ############# 1. Setup variables and input files #########################
     fasta_file, fasta2_file, rr_file, out_dir, ss_file, omega_file,\
             theta_file, residues, lbd, selectrr, rrtype,\
@@ -120,36 +120,51 @@ def _model(fasta, contacts, out_dir, fasta2='', pcons=False, dist=False, rr_pthr
     _gen_initial_model(fasta_file, residues, fasta2_file, debug)
 
     ### Currently, only stage1 is implemented ###
-    stage_list = []
     stage_list = ["stage1"]
+    if stage2:
+        stage_list.append("stage2")
 
     for stage in stage_list:
+        if stage == "stage2" and not os.path.isfile(os.path.join(out_dir,"stage1", f_id + "_model1.pdb")):
+            print(os.path.join(out_dir,"stage1", f_id + "_model1.pdb"))
+            print("ERROR!! Missing top models from stage 1 when attempting to run stage 2")
+            sys.exit()
+        if stage == "stage2":
+            module_base = os.path.dirname(os.path.realpath(__file__))
+            ## Prep new stage2 directory and copy files from stage1
+            os.mkdir(os.path.join(out_dir, "stage2"))
+            for copy_file in glob.glob(os.path.join(out_dir, "stage1", "extended.*")):
+                shutil.copy(copy_file, os.path.join(out_dir, "stage2"))
+            for copy_file in glob.glob(os.path.join(out_dir, "stage1", "*.inp")):
+                shutil.copy(copy_file, os.path.join(out_dir, "stage2"))
+            for copy_file in glob.glob(os.path.join(out_dir, "stage1", "*.omega")):
+                shutil.copy(copy_file, os.path.join(out_dir, "stage2"))
+            for copy_file in glob.glob(os.path.join(out_dir, "stage1", "*.theta")):
+                shutil.copy(copy_file, os.path.join(out_dir, "stage2"))
+            for copy_file in glob.glob(os.path.join(out_dir, "stage1", "*.phi")):
+                shutil.copy(copy_file, os.path.join(out_dir, "stage2"))
+            shutil.copy(os.path.join(module_base, "templates/scalecoolsetupedited"),
+                        os.path.join(out_dir, "stage2/"))
+            shutil.copy(os.path.join(module_base, "templates/scalehotedited"),
+                        os.path.join(out_dir, "stage2/"))
+            shutil.copy(os.path.join(out_dir, "stage1", "{}.fasta".format(f_id)),
+                            os.path.join(out_dir, "stage2"))
+            if ss_file:
+                shutil.copy(os.path.join(out_dir, "stage1", "{}.ss".format(f_id)),
+                                os.path.join(out_dir, "stage2"))
         os.chdir(os.path.join(out_dir, stage))
 
         if debug:
             print("\nStart {} job...".format(stage))
 
-        contact_restraints(stage, selectrr, rrtype, out_dir, dist, rr_file)
+        contact_restraints(stage, selectrr, rrtype, out_dir, dist, f_id, rr_file, debug)
 
         ### Use secondary structure if supplied ###
         if ss_file:
             sec_restraints(stage, ss_file, res_dihe, res_hbnd, res_dist,
                            res_strnd_OO, residues, ATOMTYPE, SHIFT, debug)
             ### Update the contact.tbl file with new number of restraints
-            extra_restraints = 0
-            for tbl in ["hbond.tbl", "dihedral.tbl", "ssnoe.tbl"]:
-                if os.path.isfile(tbl):
-                    with open(tbl,'r') as tbl_handle:
-                        num = len(tbl_handle.read().split('\n'))
-                        extra_restraints += num
-            contact_to_write = ''
-            with open("contact.tbl", 'r') as contact_handle:
-                curr_restraints = int(contact_handle.readline().split('=')[1])
-                contact_to_write += 'nrestraints=' + str(extra_restraints + curr_restraints) + '\n'
-                for line in contact_handle:
-                    contact_to_write += line
-            os.remove("contact.tbl")
-            print2file("contact.tbl", contact_to_write)
+            update_nrestraints()
 
         ### Use angles files ###
         use_omega = True if omega_file else False
@@ -165,28 +180,31 @@ def _model(fasta, contacts, out_dir, fasta2='', pcons=False, dist=False, rr_pthr
         noe_scores = assess_dgsa(stage, fasta_file, ss_file, out_dir, mcount, f_id, top_models,
                     program_dssp, debug)
 
-        ### Go back to star dir and run QA ###
-        os.chdir(start_dir)
+    ### Move top models to outdir / latest stage2
+    for i in range(1,top_models+1):
+        shutil.copy("{}_model{}.pdb".format(f_id, i),"../")
+    ### Go back to start dir and run QA ###
+    os.chdir(start_dir)
 
-        ### Run QA programs for the top models ###
-        if pcons:
-            pcons_scores = qa_pcons(out_dir, f_id, program_dssp, debug)
+    ### Run QA programs for the top models ###
+    if pcons:
+        pcons_scores = qa_pcons(out_dir, f_id, program_dssp, debug)
 
-        ### If we have native structure, run with TMscore ###
-        if tmscore_pdb_file:
-            tmscores = qa_tmscore(out_dir, tmscore_pdb_file, debug)
+    ### If we have native structure, run with TMscore ###
+    if tmscore_pdb_file:
+        tmscores = qa_tmscore(out_dir, tmscore_pdb_file, debug)
 
-        scores = ""
-        for noe in noe_scores:
-            scores += "NOE {} {}\n".format(noe[0], noe[1])
-        if pcons:
-            for pcons in pcons_scores:
-                scores += "pcons {} {}\n".format(pcons[0], pcons[1])
-        if tmscore_pdb_file:
-            for tmscore in tmscores:
-                scores += "TMscore {} {}\n".format(tmscore[0], tmscore[1])
+    scores = ""
+    for noe in noe_scores:
+        scores += "NOE {} {}\n".format(noe[0], noe[1])
+    if pcons:
+        for pcons in pcons_scores:
+            scores += "pcons {} {}\n".format(pcons[0], pcons[1])
+    if tmscore_pdb_file:
+        for tmscore in tmscores:
+            scores += "TMscore {} {}\n".format(tmscore[0], tmscore[1])
 
-        print2file(out_dir + "/qa_scores.txt", scores)
+    print2file(out_dir + "/qa_scores.txt", scores)
         ##################### 3. Cleanup ##########################
     if not save_step:
         clean_output_dir(out_dir)

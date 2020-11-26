@@ -10,8 +10,9 @@ parser.add_argument("contact_file", type=str, help="Contact file in CASP or trRo
 parser.add_argument("out_dir", type=str, help="Output directory to write results")
 
 parser.add_argument("-ss_file", "--ss", default='', type=str, help="Secondary structure file in ss2/3 format")
+parser.add_argument("-stage2", "--s2", action="store_true", help="Also rung stage 2")
 
 args = parser.parse_args()
 
-pyconsFold.model_dist(args.fa_file, args.contact_file, args.out_dir, ss=args.ss)
+pyconsFold.model_dist(args.fa_file, args.contact_file, args.out_dir, ss=args.ss, stage2=args.s2)
 

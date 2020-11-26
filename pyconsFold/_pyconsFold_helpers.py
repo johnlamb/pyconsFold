@@ -191,6 +191,8 @@ def clean_output_dir(dir_out):
     #     shutil.copy(fn, dir_out)
     shutil.rmtree(dir_out + "/input")
     shutil.rmtree(dir_out + "/stage1")
+    if os.path.isdir(dir_out + "/stage2"):
+        shutil.rmtree(dir_out + "/stage2")
 
 
 # pair not implemented
@@ -200,6 +202,9 @@ def process_arguments(fasta, contacts, dir_out, ss, rrtype, selectrr, fasta2, om
     rr=False
     if contacts.lower().endswith(".npz"):
         npz=True
+        ## If we use a npz file, default rr_pthres to 0.55 as we have n^2 contacts(and because benchmark shows it)
+        if rr_pthres == 0:
+            rr_pthres = 0.55
     elif contacts.lower().endswith(".rr"):
         rr=True
     ### Check that all files exists ###
@@ -391,7 +396,6 @@ def process_arguments(fasta, contacts, dir_out, ss, rrtype, selectrr, fasta2, om
 
     ### Read in contacts and sort them on probability (5th column) ### 
     rr_lines = []
-
     with open(rr_file) as rr_handle:
         contact_between_proteins = False
         for line in rr_handle:
@@ -400,15 +404,14 @@ def process_arguments(fasta, contacts, dir_out, ss, rrtype, selectrr, fasta2, om
             if len(line.strip()) == 0:
                 continue
             x, y = (int(x) for x in line.strip().split()[:2])
-            if fasta2:
-                #  If we do docking, make sure we at least have one contact between the proteins
-                if ((x < (plen+1)) and (y > plen)) or ((y < (plen+1)) and (x > plen)):
-                    contact_between_proteins = True
-
-
+            contact_prob = float(line.strip().split()[4])
             ### Only use contacts according to separation ###
-            if (y-x)>rr_sep:
+            if (y-x)>rr_sep and contact_prob > rr_pthres:
                 rr_lines.append(line.strip().split())
+                if fasta2:
+                    #  If we do docking, make sure we at least have one contact between the proteins
+                    if ((x < (plen+1)) and (y > plen)) or ((y < (plen+1)) and (x > plen)):
+                        contact_between_proteins = True
 
     if fasta2 and not contact_between_proteins:
         # We are doing docking but there are no contacts between proteins, adding an artificial one
@@ -632,28 +635,80 @@ def rr2tbl(rr_file, tbl_file, rrtype, dir_out, dist):
     print2file(tbl_file, '\n'.join(to_print) + '\n')
 
 
-def contact_restraints(stage, selectrr, rrtype, dir_out, dist, rr_file=None):
+def residue_atom_coordinates(xyz_dict):
+    residues = {}
+    for key, value in xyz_dict.items():
+        res, atm = key.split()
+        res = int(res)
+        if res in residues:
+            residues[res].append([atm, value])
+        else:
+            residues[res]=[[atm, value]]
+    return residues
+
+
+def contact_restraints(stage, selectrr, rrtype, dir_out, dist, f_id, rr_file=None, debug=False):
     if stage == "stage1":
         if not rr_file:
             return
-        xL = selectrr + 1  # +1 to account for header line
+        xL = selectrr
         # print(rr_file)
         rr_data = []
         with open(rr_file) as rr_handle:
             i = 0
             for line in rr_handle:
                 rr_data.append(line)
+                if not re.match("^[0-9]", line):
+                    continue
                 i += 1
                 if i >= xL:
                     break
-        # subprocess.call("head -n {} {} > temp.rr".format(xL, rr_file),
-        #                 shell=True)
-        # subprocess.call("rm {}".format(rr_file), shell=True)
-        # subprocess.call("mv temp.rr {}".format(rr_file), shell=True)
         os.remove(rr_file)
         print2file(rr_file, ''.join(rr_data))
-        rr2tbl(rr_file, "contact.tbl", rrtype, dir_out, dist)
 
+    elif stage == "stage2":
+        stg1_rr = os.path.join(dir_out, "stage1", f_id + ".rr")
+        stg1_model = os.path.join(dir_out, "stage1", f_id + "_model1.pdb")
+        xyz_dict = xyz_pdb(stg1_model, "ALL")
+        res_atom_coords = residue_atom_coordinates(xyz_dict)
+
+        rr_header = []
+        rr_data = []
+        rr_accepted = []
+        rr_ignored = []
+        with open(stg1_rr) as rr_handle:
+            for line in rr_handle:
+                if re.match("^[0-9]", line):
+                    c = [float(x) for x in line.split()]
+                    r1, r2 = c[:2]
+                    pred_dist = c[3]
+                    min_dist = 10000
+                    for left in res_atom_coords[r1]:
+                        for right in res_atom_coords[r2]:
+                            measured_dist = calc_dist(left[1],right[1])
+                            if measured_dist < min_dist:
+                                min_dist = measured_dist
+                    if min_dist < pred_dist:
+                        rr_data.append(line)
+                        rr_accepted.append("Accepted " + line.strip() + " min_dist={}".format(min_dist))
+                    else:
+                        rr_ignored.append("Ignored " + line.strip() + " min_dist={}".format(min_dist))
+
+                else:
+                    rr_header.append(line)
+        if len(rr_data) == 0:
+            print("ERROR!! No contacts accepted for stage2")
+            sys.exit()
+        rr_header.extend(rr_data)
+        rr_accepted.extend(rr_ignored)
+        print2file(rr_file, ''.join(rr_header))
+        print2file(f_id + "_contact_filter.log", '\n'.join(rr_accepted))
+        if debug:
+            print("Stage 2 contact filtering.. removed {} contacts".format(len(rr_ignored)))
+
+    rr2tbl(rr_file, "contact.tbl", rrtype, dir_out, dist)
+
+                
 
 def angle_restraints(omega_file, use_omega, theta_file, use_theta, residues, seq_sep=1):
     dihedral_file = "dihedral.tbl"
@@ -916,7 +971,26 @@ def sec_restraints(stage, ss_file, res_dihe, res_hbnd, res_dist,
         strand_and_sheet_tbl(ss_file, None, None, res_dihe, res_strnd_OO)
     else:
         # TODO implement the next stage, using stage1 model
-        pass
+        # Now it only cares for helices, beta pairing is NOT implemented
+        strand_and_sheet_tbl(ss_file, None, None, res_dihe, res_strnd_OO)
+
+
+def update_nrestraints():
+            ### Update the contact.tbl file with new number of restraints
+            extra_restraints = 0
+            for tbl in ["hbond.tbl", "dihedral.tbl", "ssnoe.tbl"]:
+                if os.path.isfile(tbl):
+                    with open(tbl,'r') as tbl_handle:
+                        num = len(tbl_handle.read().split('\n'))
+                        extra_restraints += num
+            contact_to_write = ''
+            with open("contact.tbl", 'r') as contact_handle:
+                curr_restraints = int(contact_handle.readline().split('=')[1])
+                contact_to_write += 'nrestraints=' + str(extra_restraints + curr_restraints) + '\n'
+                for line in contact_handle:
+                    contact_to_write += line
+            os.remove("contact.tbl")
+            print2file("contact.tbl", contact_to_write)
 
 
 def count_lines(input_file):
@@ -1567,8 +1641,8 @@ def assess_dgsa(stage, fasta_file, ss_file, dir_out, mcount, f_id, num_top_model
                                   key=lambda i: i[1]):
         if debug:
             print("model{}.pdb <= {}".format(i, pdb))
-        shutil.copy(pdb, os.path.join(dir_out, "{}_model{}.pdb".format(f_id, i)))
-        shutil.move(pdb, "{}_model{}.pdb".format(f_id, i))
+        shutil.move(pdb, os.path.join(dir_out, "{}".format(stage),"{}_model{}.pdb".format(f_id, i)))
+        # shutil.move(pdb, "{}_model{}.pdb".format(f_id, i))
         # print2file(os.path.join(dir_out, "{}_model{}.noe".format(f_id, i)), "{}".format(noe_energy))
         return_array.append(["{}_model{}.noe".format(f_id, i), noe_energy])
         i += 1
