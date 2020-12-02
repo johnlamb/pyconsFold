@@ -12,8 +12,9 @@ pyconsFold require a working installation of [CNS](http://cns-online.org). This 
 	4. Change into the resulting directory `cd cns_solve_1.3`
 	5. Unhide the bash-specific file `mv .cns_solve_env_sh cns_solve_env.sh`
 	6. In this resulting file, replace `_CNSsolve_location_` with the CNS installation folder. If you extracted the file in your homefolder then the CNS installation would be: `/home/<your username>/cns_solve_1.3`
-	7. Source CNS, `source cns_solve_env.sh`, to make this permanent and to prevent you having to do this every time, add it to your .bashrc file.
+	7. Source CNS, `source cns_solve_env.sh`\*, to make this permanent and to prevent you having to do this every time, add it to your .bashrc file.
 	8. Test CNS by going into the test folder `cd test` and run the tests `../bin/run_tests -tidy *.inp`
+_* If you get an error about csh interpreter, you need to install csh_
 
 2. Install pyconsFold
 	1. Run `pip install pyconsFold`
