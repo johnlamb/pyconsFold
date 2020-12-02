@@ -24,6 +24,30 @@ CBATOM = {"A": "cb", "N": "cb", "C": "cb", "Q": "cb", "H": "cb", "L": "cb",
 
 
 def check_programs(program_dssp, program_pcons, program_tmscore, cns_suite, cns_executable):
+        ### Start by checking so CNS is installed ###
+        if not os.path.isdir(cns_suite):
+            print("ERROR! Can not find CNS suite folder at " +
+                  "{}".format(cns_suite))
+            print("It does not look like you have CNS installed and in your path.")
+            print("Install cns (http://cns-online.org/v1.3/) and follow the setup instructions (https://github.com/johnlamb/pyconsfold)")
+            sys.exit()
+        if not os.path.isfile(cns_suite + "/cns_solve_env.sh"):
+            print("ERROR! cns_solve_env.sh not found inside " +
+                  "{}".format(cns_suite))
+            print("Check CNS installation!")
+            sys.exit()
+        if not os.path.isfile(cns_executable):
+            print("ERROR! CNS executable not found at " +
+                  "{}".format(cns_executable))
+            print("Check CNS installation!")
+            sys.exit()
+        if not os.path.isfile(cns_suite + "/libraries/toppar/protein.param"):
+            print("ERROR! protein.param not found inside " +
+                  "{}/libraries/toppar/!".format(cns_executable))
+            print("Check CNS installation!")
+            sys.exit()
+
+        ### Check the different utils ###
         if shutil.which("dssp"):
             program_dssp = shutil.which("dssp")
         elif not os.path.isfile(program_dssp):
@@ -46,26 +70,27 @@ def check_programs(program_dssp, program_pcons, program_tmscore, cns_suite, cns_
                   "{}".format(program_TMscore))
             print("Please install TMscore to use")
             sys.exit()
+        if shutil.which("dssp"):
+            program_dssp = shutil.which("dssp")
+        elif not os.path.isfile(program_dssp):
+            print("ERROR! Can not find dssp program at " +
+                  "{}".format(program_dssp))
+            sys.exit()
 
-        if not os.path.isdir(cns_suite):
-            print("ERROR! Can not find CNS suite folder at " +
-                  "{}".format(cns_suite))
-            print("Check CNS installation!")
+        if shutil.which("pcons"):
+            program_dssp = shutil.which("pcons")
+        elif not os.path.isfile(program_pcons):
+            print("ERROR! Can not find pcons program at " +
+                  "{}".format(program_pcons))
             sys.exit()
-        if not os.path.isfile(cns_suite + "/cns_solve_env.sh"):
-            print("ERROR! cns_solve_env.sh not found inside " +
-                  "{}".format(cns_suite))
-            print("Check CNS installation!")
-            sys.exit()
-        if not os.path.isfile(cns_executable):
-            print("ERROR! CNS executable not found at " +
-                  "{}".format(cns_executable))
-            print("Check CNS installation!")
-            sys.exit()
-        if not os.path.isfile(cns_suite + "/libraries/toppar/protein.param"):
-            print("ERROR! protein.param not found inside " +
-                  "{}/libraries/toppar/!".format(cns_executable))
-            print("Check CNS installation!")
+
+        if shutil.which("TMscore"):
+            program_tmscore = shutil.which("pcons")
+        elif not os.path.isfile(program_tmscore):
+            print("ERROR! You can only compare the models against a native structure if you have TMscore installed")
+            print("ERROR! Can not find TMscore program at " +
+                  "{}".format(program_TMscore))
+            print("Please install TMscore to use")
             sys.exit()
         return program_dssp, program_pcons, program_tmscore, cns_suite, cns_executable
 

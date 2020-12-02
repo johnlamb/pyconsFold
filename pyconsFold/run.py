@@ -43,7 +43,7 @@ SHIFT = {"0": 1, "+1": 1, "-1": 1}
 
 
 def _initialize(fasta, contacts, out_dir, dist, rr='', npz='', fasta2='', ss='', rrtype='cb', selectrr="all", omega='', theta='', mcount=20,
-                      lbd=0.4, contwt=10, sswt=5, rep2=0.85, rr_pthres=0.0, rr_sep=5, rep1=1, atomselect=2, mode='trial',debug=False, bin_values={},tmscore_pdb_file=False,use_angles=False):
+                      lbd=0.4, contwt=10, sswt=5, rep2=0.85, rr_pthres=0.0, rr_sep=0, rep1=1, atomselect=2, mode='trial',debug=False, bin_values={},tmscore_pdb_file=False,use_angles=False):
 
     #### If we should use tmscore to compare to native structure, make sure it is installed and accessable ###
     base_dir = os.getcwd()
@@ -96,7 +96,7 @@ def _gen_initial_model(fasta_file, residues, fasta2_file, debug):
             sys.exit()
 
 ### Main model function, all other is based on this ###
-def _model(fasta, contacts, out_dir, fasta2='', pcons=False, dist=False, rr_pthres=0.00, top_models=5, save_step=False, stage2=False, **kwargs):
+def _model(fasta, contacts, out_dir, fasta2='', pcons=False, dist=False, rr_pthres=0.00, top_models=20, save_step=False, stage2=False, **kwargs):
     ############# 1. Setup variables and input files #########################
     fasta_file, fasta2_file, rr_file, out_dir, ss_file, omega_file,\
             theta_file, residues, lbd, selectrr, rrtype,\
@@ -216,7 +216,7 @@ def _model(fasta, contacts, out_dir, fasta2='', pcons=False, dist=False, rr_pthr
 
 
 ### Base model function, uses simple binary contacts ###
-def model(fasta, contacts, out_dir, top_models=5, pcons=False, save_step=False, **kwargs):
+def model(fasta, contacts, out_dir, rr_pthres=0.80, top_models=20, pcons=False, save_step=False, **kwargs):
     """Classic modelling using binary contacts
 
     Positional arguments:
@@ -232,7 +232,7 @@ def model(fasta, contacts, out_dir, top_models=5, pcons=False, save_step=False, 
     _model(fasta, contacts, out_dir, dist=False, top_models=top_models, pcons=pcons, save_step=save_step, **kwargs)
 
 ### Model using distances, distance flag and rr_pthres is set ###
-def model_dist(fasta, contacts, out_dir, rr_pthres=0.55, dist=True, top_models=5, pcons=False, save_step=False, **kwargs):
+def model_dist(fasta, contacts, out_dir, rr_pthres=0.45, dist=True, top_models=20, pcons=False, save_step=False, **kwargs):
     """Distance modelling using distance contacts
 
     Positional arguments:
@@ -251,7 +251,7 @@ def model_dist(fasta, contacts, out_dir, rr_pthres=0.55, dist=True, top_models=5
 
 
 ### Docking, a second fasta file is supplied and distance is used by default (trRosetta output)
-def model_dock(fasta, fasta2, contacts, out_dir, rr_pthres=0.55, dist=True, top_models=5, pcons=False, save_step=False, **kwargs):
+def model_dock(fasta, fasta2, contacts, out_dir, rr_pthres=0.50, dist=True, top_models=20, pcons=False, save_step=False, **kwargs):
     """Docking modelling using distance or binary contacts
 
     Positional arguments:

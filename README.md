@@ -24,13 +24,24 @@ pyconsFold require a working installation of [CNS](http://cns-online.org). This 
 ```python
 import pyconsFold
 
-pyconsFold.model(fasta, contacts, out_dir)
+pyconsFold.model_dist(fasta, contacts, out_dir)
 ```
 
 ## Functions
 	model      -- Classic modelling using binary contact predictions (although the contact file can contain distance and errors they wont be used)
 	model_dist -- Model using distance and errors, requires either a CASP-formated rr file with additional column with standard error in Ångströms or a trRosetta-contacts file in npz-format.
 	model_dock -- Perform modelling and docking of two protein chains. Requires _one_ contacts file with both inter- and intra-contacts.
+### Top arguments
+```
+rr_pthres	--	Threshold for the confidence we want in a prediction (default model(0.80), model_dist(0.45), model_dock(0.50))
+rr_sep		--  Separation between contacts (default 0)
+selectrr	--	How many contacts to use? Can be "all", "#L", or #. (default "all")
+mcount		--	How many models to generate? (default 20)
+top_models	--  How many of the generated models should be ranked and saved? (default 20)
+use_angles	--	If predicted angels should be used, only works with npz (default False)
+omega		--	RR-formated file with omega angles (if npz are not used) (default '')
+theta		--	RR-formated file with theta angles (if npz are not used) (default '')
+```
 
 ## Utilities
 QA-function arguments to all above functions:
@@ -46,4 +57,15 @@ npz_to_casp("trRosetta.npz")  ##  Converts trRosetta distance and angle predicti
 pdb_to_npz("structure.pdb")   ##  Converts a structure (pdb/mmCif) to trRosetta distances and angles, useful when investigating how well a model conforms to restraints
 ```
 
-To install: `pip install -e .`
+## Adjustable parameters for CNS, advanced
+```
+rrtype		--  Between which atoms in a residue are the contacts? (default 'cb')
+lbd			--	Lambda, 0.1-10 (default 0.4)
+contwt		--	Contact restraint weights, 0.1-10000 (default 10)
+sswt		--	Secondary structure weights, 0.1-100 (default 5)
+debug		--	Write out debug information (default False)
+bin_values	--	Dictionary of bin_values for converstion of npz to RR-format, see source code (default {})
+
+
+
+```
