@@ -36,7 +36,6 @@ raw_cns_executable = raw_cns_suite + "/intel-x86_64bit-linux/bin/cns_solve"
 ### Check so that DSSP, pcons, TMscore and CNS is accessable ###
 ################################################################
 program_dssp, program_pcons, program_tmscore, cns_suite, cns_executable = check_programs(raw_program_dssp, raw_program_pcons, raw_program_tmscore, raw_cns_suite, raw_cns_executable)
-
 ATOMTYPE = {"CA": 1, "N": 1, "C": 1, "O": 1}
 SHIFT = {"0": 1, "+1": 1, "-1": 1}
 
@@ -191,7 +190,7 @@ def _model(fasta, contacts, out_dir, fasta2='', pcons=False, dist=False, rr_pthr
 
     ### If we have native structure, run with TMscore ###
     if tmscore_pdb_file:
-        tmscores = qa_tmscore(out_dir, tmscore_pdb_file, debug)
+        tmscores = qa_tmscore(out_dir, tmscore_pdb_file, program_tmscore, debug)
 
     scores = ""
     for noe in noe_scores:

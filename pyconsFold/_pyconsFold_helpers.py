@@ -63,7 +63,8 @@ def check_programs(program_dssp, program_pcons, program_tmscore, cns_suite, cns_
             sys.exit()
 
         if shutil.which("TMscore"):
-            program_tmscore = shutil.which("pcons")
+            print("Which tmscore")
+            program_tmscore = shutil.which("TMscore")
         elif not os.path.isfile(program_tmscore):
             print("ERROR! You can only compare the models against a native structure if you have TMscore installed")
             print("ERROR! Can not find TMscore program at " +
@@ -1672,11 +1673,11 @@ def qa_pcons(dir_out, f_id, program_pcons, debug):
     return sorted(return_array, key=lambda x: x[1], reverse=True)
 
 
-def qa_tmscore(dir_out, native_struct, debug):
+def qa_tmscore(dir_out, native_struct, program_tmscore, debug):
     model_list = load_pdb(dir_out)
     return_array = [] 
     for model in model_list:
-        command = 'TMscore {} {}'.format(model, native_struct)
+        command = '{} {} {}'.format(program_tmscore, model, native_struct)
         process = subprocess.Popen([command],
                                    stdout=subprocess.PIPE, shell=True)
         tmscore_rows = process.communicate()[0].decode("utf-8")
