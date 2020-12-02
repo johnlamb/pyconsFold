@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
         name="pyconsFold",
-        version="0.1.1",
+        version="0.1.2",
         author="John Lamb",
         author_email="john@biolamb.se",
         description="A python wrapper around CNS for modelling and docking using distance predictions, inspired by CONFOLD",
@@ -14,7 +14,7 @@ setuptools.setup(
         url="https://github.com/johnlamb/pyconsFold",
         packages=setuptools.find_packages(),
         include_package_data=True,
-        package_data={'': ['pyconsFold/templates/*','pyconsFold/dssp/*','pyconsFold/TMscore/*','pyconsFold/pcons/*']},
+        package_data={'': ['templates/*','dssp/*','TMscore/*','pcons/*']},
         zip_safe=False,
         classifiers=[
             "Programming Language :: Python :: 3",
