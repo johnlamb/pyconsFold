@@ -14,6 +14,7 @@ setuptools.setup(
         url="https://github.com/johnlamb/pyconsFold",
         packages=setuptools.find_packages(),
         include_package_data=True,
+        package_data={'': ['pyconsFold/templates/*','pyconsFold/dssp/*','pyconsFold/TMscore/*','pyconsFold/pcons/*']},
         zip_safe=False,
         classifiers=[
             "Programming Language :: Python :: 3",
