@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
         name="pyconsFold",
-        version="0.1.3",
+        version="0.1.4",
         author="John Lamb",
         author_email="john@biolamb.se",
         description="A python wrapper around CNS for modelling and docking using distance predictions, inspired by CONFOLD",
