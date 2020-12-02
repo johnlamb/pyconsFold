@@ -59,7 +59,7 @@ pdb_to_npz("structure.pdb")   ##  Converts a structure (pdb/mmCif) to trRosetta 
 
 ## Adjustable parameters for CNS, advanced
 ```
-rrtype		--  Between which atoms in a residue are the contacts? (default 'cb')
+rrtype		--	Between which atoms in a residue are the contacts? (default 'cb')
 lbd			--	Lambda, 0.1-10 (default 0.4)
 contwt		--	Contact restraint weights, 0.1-10000 (default 10)
 sswt		--	Secondary structure weights, 0.1-100 (default 5)
