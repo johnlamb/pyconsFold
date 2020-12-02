@@ -20,7 +20,6 @@ from ._pyconsFold_helpers import (assess_dgsa, build_extended, build_models,
                                  sec_restraints, update_nrestraints, xyz_pdb, angle_restraints,
                                  qa_pcons, qa_tmscore, print2file)
 from ._pyconsFold_libs import load_ss_restraints
-from ._arguments import get_args
 
 ################## Default dssp, pcons and tmscore ########################################
 raw_program_dssp = os.path.join(os.path.dirname(os.path.realpath(__file__)),\

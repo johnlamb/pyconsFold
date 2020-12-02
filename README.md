@@ -35,6 +35,9 @@ pyconsFold.model_dist(fasta, contacts, out_dir)
 ```
 rr_pthres	--	Threshold for the confidence we want in a prediction (default model(0.80), model_dist(0.45), model_dock(0.50))
 rr_sep		--	Separation between contacts (default 0)
+save_step	--	Save working steps (default False)
+stage2		--	Run stage2, filter contacts vs generated structure and generate new structures with filtered contacts (default False)
+debug		--	Write out debug information (default False)
 selectrr	--	How many contacts to use? Can be "all", "#L", or #. (default "all")
 mcount		--	How many models to generate? (default 20)
 top_models	--	How many of the generated models should be ranked and saved? (default 20)
@@ -63,7 +66,6 @@ rrtype		--	Between which atoms in a residue are the contacts? (default 'cb')
 lbd			--	Lambda, 0.1-10 (default 0.4)
 contwt		--	Contact restraint weights, 0.1-10000 (default 10)
 sswt		--	Secondary structure weights, 0.1-100 (default 5)
-debug		--	Write out debug information (default False)
 bin_values	--	Dictionary of bin_values for converstion of npz to RR-format, see source code (default {})
 
 

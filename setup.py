@@ -8,7 +8,7 @@ setuptools.setup(
         version="0.1",
         author="John Lamb",
         author_email="john@biolamb.se",
-        description="A python wrapper around CNS for modelling and docking, inspired by CONFOLD",
+        description="A python wrapper around CNS for modelling and docking using distance predictions, inspired by CONFOLD",
         long_description=long_description,
         long_description_content_type="text/markdown",
         url="https://github.com/johnlamb/pyconsFold",
