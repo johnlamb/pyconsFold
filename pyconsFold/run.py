@@ -50,7 +50,7 @@ def _initialize(fasta, contacts, out_dir, dist, rr='', npz='', fasta2='', ss='',
 
     ### Process all arguments, check validity and set up inputs ###
     fasta_file, fasta2_file, rr_file, ss_file, omega_file, theta_file, residues, f_id, selectrr, mini =\
-            process_arguments(fasta, contacts, dir_out, ss, rrtype, selectrr, fasta2, omega, theta, mcount, lbd, contwt, sswt, rep2, rr_pthres, rr_sep, use_angles, debug)
+            process_arguments(fasta, contacts, dir_out, ss, rrtype, selectrr, fasta2, omega, theta, mcount, lbd, contwt, sswt, rep2, rr_pthres, rr_sep, use_angles, tmscore_pdb_file, debug)
     return fasta_file, fasta2_file, rr_file, dir_out, ss_file, omega_file, theta_file, residues, lbd,\
             selectrr, rrtype, contwt, sswt, mcount, mode, rep1, rep2, mini, f_id, atomselect, debug, tmscore_pdb_file
 
@@ -187,7 +187,7 @@ def _model(fasta, contacts, out_dir, fasta2='', pcons=False, dist=False, rr_pthr
 
     ### Run QA programs for the top models ###
     if pcons:
-        pcons_scores = qa_pcons(out_dir, f_id, program_dssp, debug)
+        pcons_scores = qa_pcons(out_dir, f_id, program_pcons, debug)
 
     ### If we have native structure, run with TMscore ###
     if tmscore_pdb_file:

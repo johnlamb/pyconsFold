@@ -70,28 +70,6 @@ def check_programs(program_dssp, program_pcons, program_tmscore, cns_suite, cns_
                   "{}".format(program_TMscore))
             print("Please install TMscore to use")
             sys.exit()
-        if shutil.which("dssp"):
-            program_dssp = shutil.which("dssp")
-        elif not os.path.isfile(program_dssp):
-            print("ERROR! Can not find dssp program at " +
-                  "{}".format(program_dssp))
-            sys.exit()
-
-        if shutil.which("pcons"):
-            program_dssp = shutil.which("pcons")
-        elif not os.path.isfile(program_pcons):
-            print("ERROR! Can not find pcons program at " +
-                  "{}".format(program_pcons))
-            sys.exit()
-
-        if shutil.which("TMscore"):
-            program_tmscore = shutil.which("pcons")
-        elif not os.path.isfile(program_tmscore):
-            print("ERROR! You can only compare the models against a native structure if you have TMscore installed")
-            print("ERROR! Can not find TMscore program at " +
-                  "{}".format(program_TMscore))
-            print("Please install TMscore to use")
-            sys.exit()
         return program_dssp, program_pcons, program_tmscore, cns_suite, cns_executable
 
 
@@ -222,7 +200,12 @@ def clean_output_dir(dir_out):
 
 # pair not implemented
 def process_arguments(fasta, contacts, dir_out, ss, rrtype, selectrr, fasta2, omega, theta, mcount,
-                      lbd, contwt, sswt, rep2, rr_pthres, rr_sep, use_angles, debug):
+                      lbd, contwt, sswt, rep2, rr_pthres, rr_sep, use_angles, tmscore_pdb_file, debug):
+    if tmscore_pdb_file:
+        if not os.path.isfile(tmscore_pdb_file):
+            print("ERROR! Native PDB file {} does not exist!".format(tmscore_pdb_file))
+            sys.exit()
+
     npz=False
     rr=False
     if contacts.lower().endswith(".npz"):
