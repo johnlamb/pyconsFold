@@ -45,8 +45,8 @@ theta		--	RR-formated file with theta angles (if npz are not used) (default '')
 
 ## Utilities
 QA-function arguments to all above functions:
-	pcons (default False) -- If set to true, gives pcons score for all models (using either pcons installed in the PATH or the builtin binary)
-	tmscore_pdb_file      -- If a structure file is supplied, runs all models against this (presumed) native structure and reports the TMscore (using either TMscore in the PATH or builtin binary)
+* pcons (default False) -- If set to true, gives pcons score for all models (using either pcons installed in the PATH or the builtin binary)
+* tmscore_pdb_file      -- If a structure file is supplied, runs all models against this (presumed) native structure and reports the TMscore (using either TMscore in the PATH or builtin binary)
 
 ## Extras
 ```python
