@@ -9,7 +9,12 @@ import re
 import shutil
 import subprocess
 import tempfile
-from .utils import npz_to_casp
+try:
+    from .utils import npz_to_casp
+    extra_compatible = True
+except ModuleNotFoundError:
+    extra_compatible = False
+
 
 AA3TO1 = {"ALA": "A", "ASN": "N", "CYS": "C", "GLN": "Q", "HIS": "H",
           "LEU": "L", "MET": "M", "PRO": "P", "THR": "T", "TYR": "Y",
@@ -306,6 +311,11 @@ def process_arguments(fasta, contacts, dir_out, ss, rrtype, selectrr, fasta2, om
 
     ### Optional files ###
     if npz:
+        if not extra_compatible:
+            print("ERROR: Using npz-files requires additional dependencies (BioPython, scypi and numpy)")
+            print("Install the using: `pip3 install -U pyconsFold[all]`")
+            clean_output_dir(dir_out)
+            sys.exit()
         npz_dir = tempfile.mkdtemp()
         if fasta2:
             npz_to_casp(contacts, fasta_file=fasta, fasta2_file=fasta2, out_base_path=npz_dir)

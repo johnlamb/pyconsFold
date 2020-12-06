@@ -22,9 +22,9 @@ setuptools.setup(
             "Operating System :: Unix",
             ],
         python_requires='>3.5',
-        install_requires=[
+        extra_requires={"all":[
             'biopython>=1.7',
             'numpy>=1.19',
-            'scipy>=1.4.0'
-            ],
+            'scipy>=1.4.0']
+            },
         )
