@@ -68,7 +68,6 @@ def check_programs(program_dssp, program_pcons, program_tmscore, cns_suite, cns_
             sys.exit()
 
         if shutil.which("TMscore"):
-            print("Which tmscore")
             program_tmscore = shutil.which("TMscore")
         elif not os.path.isfile(program_tmscore):
             print("ERROR! You can only compare the models against a native structure if you have TMscore installed")
@@ -199,6 +198,8 @@ def clean_output_dir(dir_out):
     # for fn in glob.glob(dir_out + "/stage1/*_model*.pdb"):
     #     shutil.copy(fn, dir_out)
     shutil.rmtree(dir_out + "/input")
+    if os.path.isdir(dir_out + "/stage1"):
+        shutil.rmtree(dir_out + "/stage1")
     shutil.rmtree(dir_out + "/stage1")
     if os.path.isdir(dir_out + "/stage2"):
         shutil.rmtree(dir_out + "/stage2")

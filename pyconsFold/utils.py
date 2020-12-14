@@ -382,7 +382,7 @@ def pdb_to_npz(npz_name, pdb_file=False, mmCIF_file=False, std=1):
                     j += 1
             i += 1
 
-    np.savez_compressed(args.npz_name,
+    np.savez_compressed(npz_name,
                         dist=dist_mat,
                         omega=omega_mat,
                         theta=theta_mat,
