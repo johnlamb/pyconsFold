@@ -200,7 +200,6 @@ def clean_output_dir(dir_out):
     shutil.rmtree(dir_out + "/input")
     if os.path.isdir(dir_out + "/stage1"):
         shutil.rmtree(dir_out + "/stage1")
-    shutil.rmtree(dir_out + "/stage1")
     if os.path.isdir(dir_out + "/stage2"):
         shutil.rmtree(dir_out + "/stage2")
 
