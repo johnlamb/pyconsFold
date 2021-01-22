@@ -46,6 +46,9 @@ def _initialize(fasta, contacts, out_dir, dist, rr='', npz='', fasta2='', ss='',
     #### If we should use tmscore to compare to native structure, make sure it is installed and accessable ###
     base_dir = os.getcwd()
     dir_out = os.path.join(base_dir, out_dir)
+    if fasta2 and tmscore_pdb_file:
+        tmscore_pdb_file = ''  # If we are doing docking, regular TMscore cannot be used
+        print("TMscore does not support multi chains, try MMalign")
 
     ### Process all arguments, check validity and set up inputs ###
     fasta_file, fasta2_file, rr_file, ss_file, omega_file, theta_file, residues, f_id, selectrr, mini =\
@@ -266,5 +269,5 @@ def model_dock(fasta, fasta2, contacts, out_dir, rr_pthres=0.50, dist=True, top_
     save_step  -- Save intermediate steps and work files (default False)
     """
 
-    _model(fasta, contacts, out_dir, fasta2=fasta2, top_models=top_models, pcons=pcons, save_step=save_step, **kwargs)
+    _model(fasta, contacts, out_dir, fasta2=fasta2, dist=dist, rr_pthres=rr_pthres, top_models=top_models, pcons=pcons, save_step=save_step, **kwargs)
     
