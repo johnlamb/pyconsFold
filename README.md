@@ -73,7 +73,7 @@ bin_values	--	Dictionary of bin_values for converstion of npz to RR-format, see 
 
 ```
 ### Benchmark
-The full benchmark is split into 2 \*.tar.gzip files. See the links in the repo. They contain 105 proteins each for a total of 210 proteins.
+The benchmark is built on the [Pconsc3](https://pconsc3.bioinfo.se/) dataset and is available for download [here](https://pconsc3.bioinfo.se/static/download/pyconsFold_benchmark.tar.gz).
 The benchmark contains the input alignment, initial fasta file, predicted distance (both as \*.rr and \*.npz files)
-together with one model each for base/dist/trRosetta and Tmscore and timings for each. Observe that the times for the base
+together with one model each for base/dist/trRosetta and Tmscore and timings for each of the 210 proteins. Observe that the times for the base
 and distance models are for a total of 20 models whereas the timing for trRosetta are for 1 model.
