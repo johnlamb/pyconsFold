@@ -72,3 +72,8 @@ bin_values	--	Dictionary of bin_values for converstion of npz to RR-format, see 
 
 
 ```
+### Benchmark
+The full benchmark is split into 2 \*.tar.gzip files. See the links in the repo. They contain 105 proteins each for a total of 210 proteins.
+The benchmark contains the input alignment, initial fasta file, predicted distance (both as \*.rr and \*.npz files)
+together with one model each for base/dist/trRosetta and Tmscore and timings for each. Observe that the times for the base
+and distance models are for a total of 20 models whereas the timing for trRosetta are for 1 model.
