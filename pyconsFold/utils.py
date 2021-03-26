@@ -1,10 +1,10 @@
 import argparse
 from Bio.PDB.vectors import rotaxis, calc_angle, calc_dihedral
-from Bio.PDB.Polypeptide import is_aa
+from Bio.PDB.Polypeptide import is_aa, three_to_one
 from math import pi
 import numpy as np
 import scipy.stats as st
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 import sys
 import os
 
@@ -196,7 +196,8 @@ def _virtual_cb_vector(residue):
     return cb
 
 
-def pdb_to_npz(npz_name, pdb_file=False, mmCIF_file=False, std=1):
+def pdb_to_npz(npz_name, pdb_file=False, mmCIF_file=False, std=1,
+               DIST_STEP=0.5, OMEGA_STEP=15, THETA_STEP=15, PHI_STEP=15):
     """
     Convert a pdb/mcif to trRosetta distances/angles
     """
@@ -205,12 +206,12 @@ def pdb_to_npz(npz_name, pdb_file=False, mmCIF_file=False, std=1):
         from Bio.PDB.PDBParser import PDBParser
         bio_parser = PDBParser(PERMISSIVE=1)
         structure_file = pdb_file
-        structure_id = pdb_file.name[:-4]
+        structure_id = pdb_file[:-4]
     elif mmCIF_file:
         from Bio.PDB.MMCIFParser import MMCIFParser
         bio_parser = MMCIFParser()
         structure_file = mmCIF_file
-        structure_id = mmCIF_file.name[:-4]
+        structure_id = mmCIF_file[:-4]
     else:
         print("No file given: one pdb or one mmCIF file has to be definied")
         sys.exit()
@@ -227,11 +228,11 @@ def pdb_to_npz(npz_name, pdb_file=False, mmCIF_file=False, std=1):
             residues.append(residue1.get_resname())
     plen = len(residues)
 
-    # Setup bins and step for the final matrix
-    DIST_STEP = 0.5
-    OMEGA_STEP = 15
-    THETA_STEP = 15
-    PHI_STEP = 15
+    # # Setup bins and step for the final matrix
+    # DIST_STEP = 0.5
+    # OMEGA_STEP = 15
+    # THETA_STEP = 15
+    # PHI_STEP = 15
 
     z_per_bin = std/DIST_STEP
     z_step = z_per_bin/2
@@ -387,3 +388,103 @@ def pdb_to_npz(npz_name, pdb_file=False, mmCIF_file=False, std=1):
                         omega=omega_mat,
                         theta=theta_mat,
                         phi=phi_mat)
+
+
+def pdb_to_casp(rr_name, pdb_file=False, mmCIF_file=False, cutoff=16, confidence=0.99, std=1, method="From_structure"):
+    """
+    Convert a pdb/mcif to CASP rr-format
+    """
+
+    if pdb_file:
+        from Bio.PDB.PDBParser import PDBParser
+        bio_parser = PDBParser(PERMISSIVE=1)
+        structure_file = pdb_file
+        structure_id = pdb_file[:-4]
+    elif mmCIF_file:
+        from Bio.PDB.MMCIFParser import MMCIFParser
+        bio_parser = MMCIFParser()
+        structure_file = mmCIF_file
+        structure_id = mmCIF_file[:-4]
+    else:
+        print("No file given: one pdb or one mmCIF file has to be definied")
+        sys.exit()
+
+    line = "{i} {j} 0 {m:.5f} {c:.2f} {sd:.4f}\n"
+    first_chain = ''
+    chain_length = defaultdict()
+    # Load structure
+    structure = bio_parser.get_structure(structure_id, structure_file)
+
+    # Get residues and length of protein
+    residues = ""
+    c_len = 0
+    for chain in structure[0]:
+        if not first_chain:
+            first_chain = chain
+        for residue1 in structure[0][chain.id]:
+            residue1
+            if not is_aa(residue1):
+                continue
+            c_len += 1
+            residues += three_to_one(residue1.get_resname())
+        chain_length[chain] = c_len
+
+    plen = len(residues)
+
+    header = '\n'.join(("PFRMAT RR",
+                       "TARGET {}".format(structure_id),
+                       "AUTHOR pyconsFold",
+                       "METHOD {}".format(method),
+                       "MODEL 1",
+                       residues + '\n'))
+
+    minvalue = 0.36
+    dist_mat = np.full((plen, plen, 37), minvalue/36)
+
+    # Iterate over all residues and calculate distances
+    i = 1
+    j = 1
+    content = [header]
+    for chain in structure[0]:
+        for residue1 in structure[0][chain.id]:
+        # Only use real atoms, not HET or water
+            if not is_aa(residue1):
+                continue
+            
+            # If the residue lacks CB (Glycine etc), create a virtual
+            if residue1.has_id('CB'):
+                c1B = residue1['CB'].get_vector()
+            else:
+                c1B = _virtual_cb_vector(residue1)
+            
+            j = 1
+            for chain in structure[0]:
+                for residue2 in structure[0][chain.id]:
+                    if not is_aa(residue2):
+                        continue
+                    if i == j:
+                        j += 1
+                        continue
+                    
+                    if i > j:
+                        j += 1
+                        continue
+                    # If the residue lacks CB (Glycine etc), create a virtual
+                    if residue2.has_id('CB'):
+                        c2B = residue2['CB'].get_vector()
+                    else:
+                        c2B = _virtual_cb_vector(residue2)
+                    ###############################################
+                    dist = (c2B-c1B).norm()
+                     
+                    if dist < cutoff:
+                        content.append(line.format(i=i, j=j, m=dist, c=confidence, sd=std))
+                    j += 1
+            i += 1
+
+    content.append("END\n")
+    with open(rr_name, 'w') as contacts_handle:
+        contacts_handle.write(''.join(content))
+
+if __name__ == "__main__":
+    pdb_to_npz(sys.argv[1],pdb_file=sys.argv[2])

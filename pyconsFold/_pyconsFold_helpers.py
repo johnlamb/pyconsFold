@@ -205,8 +205,8 @@ def clean_output_dir(dir_out):
 
 
 # pair not implemented
-def process_arguments(fasta, contacts, dir_out, ss, rrtype, selectrr, fasta2, omega, theta, mcount,
-                      lbd, contwt, sswt, rep2, rr_pthres, rr_sep, use_angles, tmscore_pdb_file, debug):
+def process_arguments(fasta, contacts, dir_out, ss, rrtype, selectrr, cutoff, fasta2, omega, theta, mcount,
+                      lbd, contwt, sswt, rep2, rr_pthres, rr_sep, use_angles, tmscore_pdb_file, npz_info, npz_min_sep, npz_pthres, bin_values, dgsa_seed, debug):
     if tmscore_pdb_file:
         if not os.path.isfile(tmscore_pdb_file):
             print("ERROR! Native PDB file {} does not exist!".format(tmscore_pdb_file))
@@ -257,8 +257,8 @@ def process_arguments(fasta, contacts, dir_out, ss, rrtype, selectrr, fasta2, om
 
     ### How many contacts to use? ###
     selectrr = selectrr.replace("L", "")
-    selectrr = 10000000 if selectrr == "all" else int(float(selectrr) * L + 0.5)
-    if not (selectrr > 0 and selectrr <= 10000000):
+    selectrr = 100000000 if selectrr == "all" else int(float(selectrr) * L + 0.5)
+    if not (selectrr > 0 and selectrr <= 100000000):
         print("ERROR! Selectrr option does not " +
               "look right: {}".format(selectrr))
         sys.exit()
@@ -318,9 +318,9 @@ def process_arguments(fasta, contacts, dir_out, ss, rrtype, selectrr, fasta2, om
             sys.exit()
         npz_dir = tempfile.mkdtemp()
         if fasta2:
-            npz_to_casp(contacts, fasta_file=fasta, fasta2_file=fasta2, out_base_path=npz_dir)
+            npz_to_casp(contacts, fasta_file=fasta, fasta2_file=fasta2, out_base_path=npz_dir,info=npz_info, min_sep=npz_min_sep, pthres=npz_pthres, bin_values=bin_values)
         else:
-            npz_to_casp(contacts, fasta_file=fasta, out_base_path=npz_dir)
+            npz_to_casp(contacts, fasta_file=fasta, out_base_path=npz_dir, info=npz_info, min_sep=npz_min_sep, pthres=npz_pthres, bin_values=bin_values)
         contacts_file = os.path.join(npz_dir, os.path.basename(contacts[:-4]) + '.rr')
         if use_angles:
             omega = os.path.join(npz_dir, os.path.basename(contacts[:-4]) + '.omega')
@@ -445,8 +445,16 @@ def process_arguments(fasta, contacts, dir_out, ss, rrtype, selectrr, fasta2, om
         rr_lines.append([str(mid_first), str(plen+mid_second),'0',str(a_dist),str(rr_pthres+0.01),str(a_dist/4)])
     ### Sort and only use contacts above set threshold ###
     rr_lines.sort(key=lambda x: float(x[4]), reverse=True)
-    rr_scores = '\n'.join([' '.join(x) for x in rr_lines if float(x[4]) > rr_pthres])
-
+    if cutoff:
+        # If we have a cutoff, only use contacts less than this
+        rr_scores = '\n'.join([' '.join(x) for x in rr_lines if (float(x[4]) > rr_pthres and float(x[3])<=cutoff)])
+    else:
+        rr_scores = '\n'.join([' '.join(x) for x in rr_lines if float(x[4]) > rr_pthres])
+    if not len(rr_scores) > 0:
+        print("ERROR! No contacts with these parameters, try lowering rr_pthres or increasing cutoff")
+        clean_output_dir(dir_out)
+        sys.exit()
+    
     ### Remove old contacts file and replace with new sorted and filtered ###
     os.remove(rr_file)
     print2file(rr_file, seq + '\n' + rr_scores + '\n')
@@ -467,6 +475,13 @@ def process_arguments(fasta, contacts, dir_out, ss, rrtype, selectrr, fasta2, om
 
     ### Change back to base directory ###
     os.chdir(base_dir)
+    
+    ### dgsa_seed, make sure it is an integer
+    try:
+        dgsa_seed = int(dgsa_seed)
+    except:
+        print("ERROR! dgsa_seed, {}, cannot be interpreted as an integer".format(dgsa_seed))
+        sys.exit()
 
     ### If debug is on, print all variables ###
     if debug:
@@ -486,7 +501,7 @@ def process_arguments(fasta, contacts, dir_out, ss, rrtype, selectrr, fasta2, om
             print("ss_seq       {}".format(ss_seq))
 
     return fasta_file, fasta2_file, rr_file, ss_file, omega_file, theta_file, residues,\
-        f_id, selectrr, mini
+        f_id, selectrr, mini, dgsa_seed
 
 
 def write_cns_seq(fasta_file, file_cns_seq, chunk=64):
@@ -1113,7 +1128,7 @@ def write_cns_gseq(input_file, plen):
 
 
 def write_cns_dgsa_file(contwt, sswt, mcount, mode,
-                        rep1, rep2, mini, f_id, atomselect):
+                        rep1, rep2, mini, f_id, atomselect, dgsa_seed=3141):
     dgsa_files = ["dgsa.inp"]
     dihed_wt1 = contwt * sswt
     dihed_wt2 = contwt * sswt
@@ -1144,6 +1159,7 @@ def write_cns_dgsa_file(contwt, sswt, mcount, mode,
     for dgsa_file in dgsa_files:
         with open(dgsa_file) as dgsa_handle:
             dgsa_dump = dgsa_handle.read()
+            dgsa_dump = re.sub("\$seed", str(dgsa_seed), dgsa_dump)
             dgsa_dump = re.sub("\$contwt", str(contwt), dgsa_dump)
             dgsa_dump = re.sub("\$mcount", str(mcount), dgsa_dump)
             dgsa_dump = re.sub("\$mode", str(mode), dgsa_dump)
@@ -1159,7 +1175,7 @@ def write_cns_dgsa_file(contwt, sswt, mcount, mode,
 
 
 def build_models(stage, fasta_file, fasta2_file, ss_file, contwt, sswt, mcount, mode,
-                 rep1, rep2, mini, f_id, atomselect, dir_out, cns_suite, debug):
+                 rep1, rep2, mini, f_id, atomselect, dir_out, cns_suite, dgsa_seed, debug):
     tbl_list = {}
     for tbl in ["contact.tbl", "ssnoe.tbl", "hbond.tbl", "dihedral.tbl"]:
         if os.path.isfile(tbl):
@@ -1183,7 +1199,7 @@ def build_models(stage, fasta_file, fasta2_file, ss_file, contwt, sswt, mcount, 
         os.remove(filename)
     write_cns_customized_modules(sswt)
     write_cns_dgsa_file(contwt, sswt, mcount, mode, rep1, rep2,
-                        mini, f_id, atomselect)
+                        mini, f_id, atomselect,dgsa_seed)
     for tbl in ["contact.tbl", "ssnoe.tbl", "hbond.tbl", "dihedral.tbl"]:
         if tbl not in tbl_list:
             subprocess.call("sed -i s/{}//g dgsa.inp".format(tbl), shell=True)

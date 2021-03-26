@@ -40,8 +40,9 @@ ATOMTYPE = {"CA": 1, "N": 1, "C": 1, "O": 1}
 SHIFT = {"0": 1, "+1": 1, "-1": 1}
 
 
-def _initialize(fasta, contacts, out_dir, dist, rr='', npz='', fasta2='', ss='', rrtype='cb', selectrr="all", omega='', theta='', mcount=20,
-                      lbd=0.4, contwt=10, sswt=5, rep2=0.85, rr_pthres=0.0, rr_sep=0, rep1=1, atomselect=2, mode='trial',debug=False, bin_values={},tmscore_pdb_file=False,use_angles=False):
+def _initialize(fasta, contacts, out_dir, dist, rr='', npz='', fasta2='', ss='', rrtype='cb', selectrr="all", cutoff=None, omega='', theta='', mcount=20,
+                      lbd=0.4, contwt=10, sswt=5, rep2=0.85, rr_pthres=0.0, rr_sep=0, rep1=1, atomselect=2, mode='trial',debug=False, npz_info=["all"],
+                      npz_min_sep=0, npz_pthres=0.15, bin_values={}, tmscore_pdb_file=False, use_angles=False, dgsa_seed=3141):
 
     #### If we should use tmscore to compare to native structure, make sure it is installed and accessable ###
     base_dir = os.getcwd()
@@ -51,10 +52,10 @@ def _initialize(fasta, contacts, out_dir, dist, rr='', npz='', fasta2='', ss='',
         print("TMscore does not support multi chains, try MMalign")
 
     ### Process all arguments, check validity and set up inputs ###
-    fasta_file, fasta2_file, rr_file, ss_file, omega_file, theta_file, residues, f_id, selectrr, mini =\
-            process_arguments(fasta, contacts, dir_out, ss, rrtype, selectrr, fasta2, omega, theta, mcount, lbd, contwt, sswt, rep2, rr_pthres, rr_sep, use_angles, tmscore_pdb_file, debug)
+    fasta_file, fasta2_file, rr_file, ss_file, omega_file, theta_file, residues, f_id, selectrr, mini, dgsa_seed =\
+            process_arguments(fasta, contacts, dir_out, ss, rrtype, selectrr, cutoff, fasta2, omega, theta, mcount, lbd, contwt, sswt, rep2, rr_pthres, rr_sep, use_angles, tmscore_pdb_file, npz_info, npz_min_sep, npz_pthres, bin_values, dgsa_seed, debug)
     return fasta_file, fasta2_file, rr_file, dir_out, ss_file, omega_file, theta_file, residues, lbd,\
-            selectrr, rrtype, contwt, sswt, mcount, mode, rep1, rep2, mini, f_id, atomselect, debug, tmscore_pdb_file
+            selectrr, rrtype, contwt, sswt, mcount, mode, rep1, rep2, mini, f_id, atomselect, debug, tmscore_pdb_file, dgsa_seed
 
 
 def _setup_working_tree(dir_out):
@@ -97,11 +98,11 @@ def _gen_initial_model(fasta_file, residues, fasta2_file, debug):
             sys.exit()
 
 ### Main model function, all other is based on this ###
-def _model(fasta, contacts, out_dir, fasta2='', pcons=False, dist=False, rr_pthres=0.00, top_models=20, save_step=False, stage2=False, **kwargs):
+def _model(fasta, contacts, out_dir, fasta2='', pcons=False, dist=False, rr_pthres=0.00, cutoff=None, selectrr="all", top_models=20, save_step=False, stage2=False, **kwargs):
     ############# 1. Setup variables and input files #########################
     fasta_file, fasta2_file, rr_file, out_dir, ss_file, omega_file,\
             theta_file, residues, lbd, selectrr, rrtype,\
-            contwt, sswt, mcount, mode, rep1, rep2, mini, f_id, atomselect, debug, tmscore_pdb_file = _initialize(fasta, contacts, out_dir, dist, fasta2=fasta2, rr_pthres=rr_pthres, **kwargs)
+            contwt, sswt, mcount, mode, rep1, rep2, mini, f_id, atomselect, debug, tmscore_pdb_file, dgsa_seed = _initialize(fasta, contacts, out_dir, dist, fasta2=fasta2, rr_pthres=rr_pthres, selectrr=selectrr, cutoff=cutoff, **kwargs)
     _setup_working_tree(out_dir)
 
     ### Change working directory into stage1 for further work ###
@@ -175,7 +176,7 @@ def _model(fasta, contacts, out_dir, fasta2='', pcons=False, dist=False, rr_pthr
 
         ### Use the generated restraint files to build models ###
         build_models(stage, fasta_file, fasta2_file, ss_file, contwt, sswt, mcount,
-                     mode, rep1, rep2, mini, f_id, atomselect, out_dir, cns_suite, debug)
+                     mode, rep1, rep2, mini, f_id, atomselect, out_dir, cns_suite, dgsa_seed, debug)
 
         ### Assess the models and rank them based on NOE energy ###
         noe_scores = assess_dgsa(stage, fasta_file, ss_file, out_dir, mcount, f_id, top_models,
@@ -217,7 +218,7 @@ def _model(fasta, contacts, out_dir, fasta2='', pcons=False, dist=False, rr_pthr
 
 
 ### Base model function, uses simple binary contacts ###
-def model(fasta, contacts, out_dir, rr_pthres=0.80, top_models=20, pcons=False, save_step=False, **kwargs):
+def model(fasta, contacts, out_dir, cutoff=8, selectrr="1.5L", top_models=20, pcons=False, save_step=False, **kwargs):
     """Classic modelling using binary contacts
 
     Positional arguments:
@@ -226,11 +227,13 @@ def model(fasta, contacts, out_dir, rr_pthres=0.80, top_models=20, pcons=False, 
     out_dir  -- Output directory
 
     Keyword arguments:
+    cutoff     -- Only use contacts less than Å (default 8)
+    selectrr   -- Only use top contacts (default 1.5L, lenght*1.5)
     top_models -- How many final models to generate? (default 5)
     save_step  -- Save intermediate steps and work files (default False)
     """
 
-    _model(fasta, contacts, out_dir, dist=False, top_models=top_models, pcons=pcons, save_step=save_step, **kwargs)
+    _model(fasta, contacts, out_dir, dist=False, cutoff=cutoff, selectrr=selectrr, top_models=top_models, pcons=pcons, save_step=save_step, **kwargs)
 
 ### Model using distances, distance flag and rr_pthres is set ###
 def model_dist(fasta, contacts, out_dir, rr_pthres=0.45, dist=True, top_models=20, pcons=False, save_step=False, **kwargs):

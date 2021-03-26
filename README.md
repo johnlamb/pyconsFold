@@ -21,6 +21,14 @@ _* If you get an error about csh interpreter, you need to install csh_
 
 3. Optional: If you clone this github repo, you can run a suite of tests using `python3 run_test.py`
 
+## Integration tests
+There are multiple integration tests and examples. To run the tests:
+```
+python3 tests/run_tests.py
+./tests/run_script_tests.sh
+```
+Example for us of both the different modelling functions and utility functions can be found in the _examples_ folder.
+
 ## Usage
 ```python
 import pyconsFold
@@ -56,18 +64,21 @@ QA-function arguments to all above functions:
 ```python
 from pyconsFold.utils import npz_to_casp, pdb_to_npz
 
-npz_to_casp("trRosetta.npz")  ##  Converts trRosetta distance and angle predictions to CASP format in separate files
+npz_to_casp("trRosetta.npz", fasta_file="seq.fa")  ##  Converts trRosetta distance and angle predictions to CASP format in separate files
 
-pdb_to_npz("structure.pdb")   ##  Converts a structure (pdb/mmCif) to trRosetta distances and angles, useful when investigating how well a model conforms to restraints
+pdb_to_npz("outname.npz",pdb_file="structure.pdb")   ##  Converts a structure (pdb/mmCif) to trRosetta distances and angles, useful when investigating how well a model conforms to restraints
+pdb_to_casp("outname.rr",pdb_file="structure.pdb")   ##  Converts a structure (pdb/mmCif) to CASP rr-format distances with errors
 ```
 
-## Adjustable parameters for CNS, advanced
+## Adjustable parameters for CNS and other advanced parameters
 ```
 rrtype		--	Between which atoms in a residue are the contacts? (default 'cb')
 lbd			--	Lambda, 0.1-10 (default 0.4)
 contwt		--	Contact restraint weights, 0.1-10000 (default 10)
 sswt		--	Secondary structure weights, 0.1-100 (default 5)
-bin_values	--	Dictionary of bin_values for converstion of npz to RR-format, see source code (default {})
+dgsa_seed	--  Seed for CNS heuristic part, useful for reproducibility (default 3141)
+
+bin_values	--	Dictionary of bin_values for converstion of npz to RR-format, see source code
 
 
 
